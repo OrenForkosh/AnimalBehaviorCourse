@@ -1,3 +1,439 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Animal Behavior — Schelling's Model</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIGlkPSJMYXllcl8yIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3OTYuNjIgNjE3LjY1Ij48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6I2ZmZjt9PC9zdHlsZT48L2RlZnM+PGcgaWQ9IkxheWVyXzEtMiI+PHBvbHlnb24gY2xhc3M9ImNscy0xIiBwb2ludHM9IjE4MC4xNiA0MTguNzkgMTgwLjE2IDQxNy42IDE4MC4xNiAzOTcuNzEgMTU5LjA4IDM5Ny43MSAxNTkuMDggNDE3LjYgMTU5LjA4IDQxOC43OSAxNTkuMDggNDM4LjY4IDE3OC45NyA0MzguNjggMTc4Ljk3IDQ1Ny4zNyAxNzguOTcgNDU4LjU2IDE3OC45NyA0NzcuMjUgMTU5LjA4IDQ3Ny4yNSAxNTkuMDggNDk3LjE0IDE0MC4zOSA0OTcuMTQgMTM5LjIgNDk3LjE0IDExOS4zMSA0OTcuMTQgMTE5LjMxIDUxOC4yMiAxMzkuMiA1MTguMjIgMTQwLjM5IDUxOC4yMiAxNTkuMDggNTE4LjIyIDE2MC4yOCA1MTguMjIgMTgwLjE2IDUxOC4yMiAxODAuMTYgNDk4LjMzIDIwMC4wNSA0OTguMzMgMjAwLjA1IDQ3OC40NSAyMDAuMDUgNDc3LjI1IDIwMC4wNSA0NTguNTYgMjAwLjA1IDQ1Ny4zNyAyMDAuMDUgNDM3LjQ4IDE4MC4xNiA0MzcuNDggMTgwLjE2IDQxOC43OSIvPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTc3Ni43Myw0OTcuMTR2LTE5Ljg5aC0zOS43N3YtMTkuODloLTc5LjU0di0xOS44OWgtMTkuODl2LTc5LjU0aC0xOS44OXYtNzkuNTRoLTE5Ljg5di01OS42NmgtMTkuODl2LTE5Ljg5aC0xOS44OXYtMTkuODloLTE5Ljg5di0xOS44OWgtMTkuODl2LTE5Ljg5aC05OS40M1YzOS43N2gtMTkuODl2LTE5Ljg5aC0xOS44OVYwaC04MC43NHYxOS44OWgtMTkuODl2MTkuODloLTE5Ljg5djk5LjQzaC0xOC42OXYtMTkuODloLTgwLjc0djE5Ljg5aC0zOS43N3YxOS44OWgtMTguNjl2LTE5Ljg5aC0xOS44OVY0MC45NmgxOS44OXYtMTkuODloNzguMzV2MTkuODloMjEuMDh2LTIxLjA4aC0xOS44OVYwaC04MC43NHYxOS44OWgtMTkuODl2MTkuODloLTE5Ljg5djEwMC42MmgxOS44OXYxOS44OWgxOS44OXYxOC42OWgtMTkuODl2MTkuODloLTE5Ljg5djU5LjY2aC0xOS44OXYxOS44OWgtMTkuODl2MTkuODlIMHYyMS4wOGgzOS43N3YzOS43N2gxOTguODZ2NTkuNjZoMTkuODl2MTkuODloMTkuODl2MzguNThoLTE5Ljg5djE5Ljg5aC0xOS44OXYyMS4wOGg4MC43NHYtMTkuODloMTkuODl2LTE5Ljg5aDE5Ljg5di0zOS43N2g1OS42NnYtMTE5LjMxaDE4LjY5djExOS4zMWgxOS44OXYxOS44OWgxOS44OXYxOS44OWg1OS42NnYxOC42OWgtMTM5LjJ2MjEuMDhoMTgwLjE2di0xOS44OWgxOS44OXYtMTkuODloMTkuODl2LTE5Ljg5aDE4LjY5djE5Ljg5aDk5LjQzdjE5Ljg5aDM5Ljc3djU4LjQ2aC0xOS44OXYxOS44OWgtNTkuNjZ2MTkuODloLTI1OC41MXYyMS4wOGgyNTkuNzF2LTE5Ljg5aDU5LjY2di0xOS44OWgxOS44OXYtMTkuODloMTkuODl2LTYwLjg1aC0xOS44OVpNMzU5LjEzLDE4MC4xNmgxOC42OXYxOC42OWgtMTguNjl2LTE4LjY5Wk0zNzkuMDIsMTYwLjI4aDE4LjY5djE4LjY5aC0xOC42OXYtMTguNjlaTTM5OC45LDE0MC4zOWgxOC42OXYxOC42OWgtMTguNjl2LTE4LjY5Wk0xNzguOTcsMjE5LjkzaDE5Ljg5djM4LjU4aC0zOC41OHYtMzguNThoMTguNjlaTTMxOC4xNywyOTkuNDh2MTguNjloLTE4LjY5di0xOC42OWgxOC42OVpNMjk4LjI4LDMxOS4zNnYxOC42OWgtMTguNjl2LTE4LjY5aDE4LjY5Wk00NzcuMjUsMjc5LjU5aDM5Ljc3djE4LjY5aC01OC40NnYtMTguNjloMTguNjlaTTQwLjk2LDI5OS40OGgxOC42OXYxOC42OWgtMTguNjl2LTE4LjY5Wk0yMzkuODIsMzM5LjI1aDM4LjU4djE4LjY5aC0zOC41OHYtMTguNjlaTTQzOC42OCwyOTkuNDhoMTguNjl2MTguNjloLTE4LjY5di0xOC42OVpNMjc5LjU5LDExOS4zMVY0MC45NmgxOS44OXYtMTkuODloNzguMzV2MTkuODloMTkuODl2OTguMjNoLTE5Ljg5djE5Ljg5aC0xOS44OXYxOS44OWgtNTguNDZ2LTE5Ljg5aC0xOS44OXYtMzkuNzdaIi8+PC9nPjwvc3ZnPg==" />
+    <style>
+:root {
+  --bg: #0e0f14;
+  --panel: #141720;
+  --panel-2: #191d29;
+  --text: #e7ebf2;
+  --muted: #a9b1c6;
+  --primary: #5b8cff;
+  --primary-strong: #3a6df5;
+  --accent: #ff6b6b;
+  --grid-border: #252a36;
+  --chip-a: #2d88ff;
+  --chip-b: #ff4757;
+  --chip-empty: #2a2f3d;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  color: var(--text);
+  background: radial-gradient(1200px 600px at 80% -10%, #1c2130, #0e0f14);
+  font: 14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Inter, sans-serif;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  padding: 14px 20px;
+  border-bottom: 1px solid #1b2030;
+  background: linear-gradient(180deg, rgba(40,45,61,0.25), rgba(20,23,32,0.25));
+  backdrop-filter: blur(6px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.sim-tabs-header { display: flex; gap: 10px; margin-left: auto; margin-right: 18px; }
+.tab { cursor: pointer; padding: 8px 10px; border-radius: 10px; border: 1px solid #23293a; color: var(--text); background: var(--panel); font-weight: 700; }
+.tab.active { filter: brightness(1.05); }
+.tab-schelling.active { background: linear-gradient(180deg, #a78bfa, #8b5cf6); border-color: rgba(0,0,0,0.15); }
+.tab-life.active { background: linear-gradient(180deg, #34d399, #10b981); border-color: rgba(0,0,0,0.15); }
+.tab-boids.active { background: linear-gradient(180deg, #fbbf24, #f59e0b); border-color: rgba(0,0,0,0.15); }
+.app-icon { width: 34px; height: 34px; border-radius: 8px; display: block; box-shadow: 0 2px 6px rgba(0,0,0,0.25); }
+.titles h1 { margin: 0; font-size: 16px; font-weight: 700; }
+.titles p { margin: 0; margin-top: 2px; font-size: 12px; color: var(--muted); }
+.titles .subtitle { color: var(--muted); }
+.sim-title { display: inline-block; margin-top: 4px; font-size: 12px; font-weight: 700; color: #9ad8c7; text-decoration: none; }
+.sim-title:hover { text-decoration: underline; }
+.controls .sim-title { margin: 10px 0 8px; font-size: 18px; font-weight: 800; letter-spacing: 0.2px; }
+.sim-title.schelling { color: var(--primary); }
+.sim-title.life { color: #10b981; }
+.spacer { flex: 1; }
+.header-link { color: var(--muted); text-decoration: none; opacity: 0.7; cursor: default; }
+.huji-logo { height: 34px; width: auto; opacity: 0.9; filter: drop-shadow(0 1px 0 rgba(0,0,0,0.2)); margin-left: 12px; }
+
+.layout {
+  display: grid;
+  grid-template-columns: 360px 1fr 320px;
+  gap: 16px;
+  padding: 16px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.panel {
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+  border: 1px solid #1a1f2c;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+.controls { padding: 16px; }
+.controls h2 { margin: 4px 0 12px; font-size: 16px; font-weight: 800; letter-spacing: 0.2px; }
+
+.sim-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+.tab { cursor: pointer; padding: 8px 10px; border-radius: 10px; border: 1px solid #23293a; color: var(--text); background: var(--panel); font-weight: 700; }
+.tab.active { background: linear-gradient(180deg, var(--primary), var(--primary-strong)); border-color: rgba(0,0,0,0.15); }
+.sim-panel { }
+
+.control-group { margin-bottom: 14px; }
+.control-group.sm { width: 50%; }
+label { display: block; font-weight: 600; margin-bottom: 6px; color: var(--muted); }
+small { display: block; margin-top: 4px; color: #8f99b2; }
+
+input[type="range"] { width: 100%; }
+input[type="range"]::-webkit-slider-thumb { cursor: pointer; }
+input[type="number"] {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px; border: 1px solid #232938;
+  background: var(--panel);
+  color: var(--text);
+}
+select {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px; border: 1px solid #232938;
+  background: var(--panel);
+  color: var(--text);
+}
+
+.row { display: flex; gap: 12px; align-items: center; }
+.checkbox { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+.checkbox input { transform: translateY(1px); }
+
+.buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; align-items: center; }
+.buttons .btn-right { margin-left: auto; display: flex; gap: 10px; }
+.btn {
+  appearance: none; border: none; outline: none; cursor: pointer;
+  padding: 10px 14px; border-radius: 12px; font-weight: 700; letter-spacing: 0.2px;
+  color: var(--text);
+  background: linear-gradient(180deg, var(--panel-2), var(--panel));
+  border: 1px solid #23293a;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+.btn .icon { display: inline-block; width: 1.1em; height: 1.1em; margin-right: 6px; vertical-align: -0.15em; }
+.btn .icon svg { width: 100%; height: 100%; fill: currentColor; display: inline-block; }
+.btn .icon .pause { display: none; }
+.btn.running .icon .play { display: none; }
+.btn.running .icon .pause { display: inline-block; }
+.btn:hover { filter: brightness(1.06); }
+.btn.primary { background: linear-gradient(180deg, var(--primary), var(--primary-strong)); border-color: rgba(0,0,0,0.15); }
+.btn.danger { background: linear-gradient(180deg, #ff6b6b, #e84a4a); border-color: rgba(0,0,0,0.15); }
+.btn.fixed { min-width: 82px; }
+
+.stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px; }
+.stat { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-radius: 10px; background: var(--panel); border: 1px solid #23293a; }
+.stat .label { color: var(--muted); }
+
+.canvas-panel { display: flex; flex-direction: column; }
+.canvas-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-bottom: 1px solid #1a1f2c; }
+.legend { display: flex; gap: 12px; color: var(--muted); }
+.legend-item { display: inline-flex; align-items: center; gap: 6px; }
+.chip { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.15); }
+.chip.a { background: var(--chip-a); }
+.chip.b { background: var(--chip-b); }
+.chip.empty { background: var(--chip-empty); }
+.chip.life-alive { background: #7ee7c4; }
+.chip.life-dead { background: #1a1f2c; }
+
+/* Ensure only the relevant legend is visible for the active simulation */
+.sim-schelling #lifeLegend { display: none !important; }
+.sim-life #schellingLegend { display: none !important; }
+.sim-boids #schellingLegend, .sim-boids #lifeLegend { display: none !important; }
+.sim-schelling #boidsLegend, .sim-life #boidsLegend { display: none !important; }
+
+/* Boids title accent */
+.sim-title.boids { color: #f59e0b; }
+.canvas-wrap { padding: 16px; }
+
+canvas#gridCanvas {
+  width: 100%;
+  height: calc(100vh - 220px);
+  max-height: 1100px;
+  display: block;
+  background: linear-gradient(180deg, #0f121a, #0c0f14);
+  border-radius: 12px;
+  border: 1px solid #1a1f2c;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02), 0 10px 26px rgba(0,0,0,0.35);
+}
+
+.app-footer {
+  padding: 10px 16px; color: var(--muted); text-align: center;
+  border-top: 1px solid #1b2030; margin-top: 10px;
+}
+
+.rules { padding: 16px; }
+.rules h2 { margin: 4px 0 12px; font-size: 16px; font-weight: 800; letter-spacing: 0.2px; }
+.rules h3 { margin: 10px 0 8px; font-size: 13px; font-weight: 800; color: var(--text); }
+.rules ul { margin: 0; padding-left: 18px; color: var(--muted); }
+.rules li { margin: 8px 0; }
+.rules .note {
+  margin-top: 12px; padding: 10px 12px; border-radius: 10px;
+  background: var(--panel); border: 1px solid #23293a; color: var(--text);
+}
+
+/* Responsive */
+@media (max-width: 980px) {
+  .layout { grid-template-columns: 1fr; }
+  canvas#gridCanvas { height: 65vh; }
+}
+
+</style>
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="brand">
+        <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIGlkPSJMYXllcl8yIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3OTYuNjIgNjE3LjY1Ij48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6I2ZmZjt9PC9zdHlsZT48L2RlZnM+PGcgaWQ9IkxheWVyXzEtMiI+PHBvbHlnb24gY2xhc3M9ImNscy0xIiBwb2ludHM9IjE4MC4xNiA0MTguNzkgMTgwLjE2IDQxNy42IDE4MC4xNiAzOTcuNzEgMTU5LjA4IDM5Ny43MSAxNTkuMDggNDE3LjYgMTU5LjA4IDQxOC43OSAxNTkuMDggNDM4LjY4IDE3OC45NyA0MzguNjggMTc4Ljk3IDQ1Ny4zNyAxNzguOTcgNDU4LjU2IDE3OC45NyA0NzcuMjUgMTU5LjA4IDQ3Ny4yNSAxNTkuMDggNDk3LjE0IDE0MC4zOSA0OTcuMTQgMTM5LjIgNDk3LjE0IDExOS4zMSA0OTcuMTQgMTE5LjMxIDUxOC4yMiAxMzkuMiA1MTguMjIgMTQwLjM5IDUxOC4yMiAxNTkuMDggNTE4LjIyIDE2MC4yOCA1MTguMjIgMTgwLjE2IDUxOC4yMiAxODAuMTYgNDk4LjMzIDIwMC4wNSA0OTguMzMgMjAwLjA1IDQ3OC40NSAyMDAuMDUgNDc3LjI1IDIwMC4wNSA0NTguNTYgMjAwLjA1IDQ1Ny4zNyAyMDAuMDUgNDM3LjQ4IDE4MC4xNiA0MzcuNDggMTgwLjE2IDQxOC43OSIvPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTc3Ni43Myw0OTcuMTR2LTE5Ljg5aC0zOS43N3YtMTkuODloLTc5LjU0di0xOS44OWgtMTkuODl2LTc5LjU0aC0xOS44OXYtNzkuNTRoLTE5Ljg5di01OS42NmgtMTkuODl2LTE5Ljg5aC0xOS44OXYtMTkuODloLTE5Ljg5di0xOS44OWgtMTkuODl2LTE5Ljg5aC05OS40M1YzOS43N2gtMTkuODl2LTE5Ljg5aC0xOS44OVYwaC04MC43NHYxOS44OWgtMTkuODl2MTkuODloLTE5Ljg5djk5LjQzaC0xOC42OXYtMTkuODloLTgwLjc0djE5Ljg5aC0zOS43N3YxOS44OWgtMTguNjl2LTE5Ljg5aC0xOS44OVY0MC45NmgxOS44OXYtMTkuODloNzguMzV2MTkuODloMjEuMDh2LTIxLjA4aC0xOS44OVYwaC04MC43NHYxOS44OWgtMTkuODl2MTkuODloLTE5Ljg5djEwMC42MmgxOS44OXYxOS44OWgxOS44OXYxOC42OWgtMTkuODl2MTkuODloLTE5Ljg5djU5LjY2aC0xOS44OXYxOS44OWgtMTkuODl2MTkuODlIMHYyMS4wOGgzOS43N3YzOS43N2gxOTguODZ2NTkuNjZoMTkuODl2MTkuODloMTkuODl2MzguNThoLTE5Ljg5djE5Ljg5aC0xOS44OXYyMS4wOGg4MC43NHYtMTkuODloMTkuODl2LTE5Ljg5aDE5Ljg5di0zOS43N2g1OS42NnYtMTE5LjMxaDE4LjY5djExOS4zMWgxOS44OXYxOS44OWgxOS44OXYxOS44OWg1OS42NnYxOC42OWgtMTM5LjJ2MjEuMDhoMTgwLjE2di0xOS44OWgxOS44OXYtMTkuODloMTkuODl2LTE5Ljg5aDE4LjY5djE5Ljg5aDk5LjQzdjE5Ljg5aDM5Ljc3djU4LjQ2aC0xOS44OXYxOS44OWgtNTkuNjZ2MTkuODloLTI1OC41MXYyMS4wOGgyNTkuNzF2LTE5Ljg5aDU5LjY2di0xOS44OWgxOS44OXYtMTkuODloMTkuODl2LTYwLjg1aC0xOS44OVpNMzU5LjEzLDE4MC4xNmgxOC42OXYxOC42OWgtMTguNjl2LTE4LjY5Wk0zNzkuMDIsMTYwLjI4aDE4LjY5djE4LjY5aC0xOC42OXYtMTguNjlaTTM5OC45LDE0MC4zOWgxOC42OXYxOC42OWgtMTguNjl2LTE4LjY5Wk0xNzguOTcsMjE5LjkzaDE5Ljg5djM4LjU4aC0zOC41OHYtMzguNThoMTguNjlaTTMxOC4xNywyOTkuNDh2MTguNjloLTE4LjY5di0xOC42OWgxOC42OVpNMjk4LjI4LDMxOS4zNnYxOC42OWgtMTguNjl2LTE4LjY5aDE4LjY5Wk00NzcuMjUsMjc5LjU5aDM5Ljc3djE4LjY5aC01OC40NnYtMTguNjloMTguNjlaTTQwLjk2LDI5OS40OGgxOC42OXYxOC42OWgtMTguNjl2LTE4LjY5Wk0yMzkuODIsMzM5LjI1aDM4LjU4djE4LjY5aC0zOC41OHYtMTguNjlaTTQzOC42OCwyOTkuNDhoMTguNjl2MTguNjloLTE4LjY5di0xOC42OVpNMjc5LjU5LDExOS4zMVY0MC45NmgxOS44OXYtMTkuODloNzguMzV2MTkuODloMTkuODl2OTguMjNoLTE5Ljg5djE5Ljg5aC0xOS44OXYxOS44OWgtNTguNDZ2LTE5Ljg5aC0xOS44OXYtMzkuNzdaIi8+PC9nPjwvc3ZnPg==" alt="Animal Behavior icon" class="app-icon" />
+        <div class="titles">
+          <h1>Animal Behavior Simulations</h1>
+          <p class="subtitle">A HUJI Course on Animal Behavior and Cognition</p>
+        </div>
+      </div>
+      <div class="spacer"></div>
+      <div class="sim-tabs-header" role="tablist" aria-label="Simulation selector">
+        <button id="tabSchelling" class="tab tab-schelling active" role="tab" aria-selected="true" aria-controls="schellingPanel">Schelling</button>
+        <button id="tabLife" class="tab tab-life" role="tab" aria-selected="false" aria-controls="lifePanel">Game of Life</button>
+        <button id="tabBoids" class="tab tab-boids" role="tab" aria-selected="false" aria-controls="boidsPanel">Boids</button>
+      </div>
+      <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIGlkPSJMYXllcl8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3Ny4xOCAxNDEuNzMiPjxkZWZzPjxzdHlsZT4uY2xzLTF7ZmlsbDojZmZmO308L3N0eWxlPjwvZGVmcz48cG9seWdvbiBjbGFzcz0iY2xzLTEiIHBvaW50cz0iNTEuMzcgNjIuNzQgNDEuMDYgNzUuNTMgNjcuODUgMTE1Ljc0IDczLjc1IDEwOC4xNSA1MS4zNyA2Mi43NCIvPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTI3Ljc2LDYuNDJsLTMuMTItNi40MnMtNi42NiwxMC4xOC02LjY2LDE0LjE0YzAsNi4yOCwyLjk1LDEwLjQyLDIuOTUsMTAuNDJoOS4xM2wxLjYyLTkuODVoLTUuODdsMS45My04LjI5WiIvPjxwb2x5Z29uIGNsYXNzPSJjbHMtMSIgcG9pbnRzPSI2OC4wOCA5MC44NiA3Ny4xOCA3OS4xNyA3Mi45MiA3MC41MyA2Mi44OCA4MC4zMiA2OC4wOCA5MC44NiIvPjxwb2x5Z29uIGNsYXNzPSJjbHMtMSIgcG9pbnRzPSIzMS43NSA4Mi45OCAyOS4xOSAzMC4xNiAyMS42OSAzMC4xNiAxNy4zNiAxMDAuNzcgMzEuNzUgODIuOTgiLz48cG9seWdvbiBjbGFzcz0iY2xzLTEiIHBvaW50cz0iMzkuMzggNzcuNiAwIDEyNi4yOSAwIDE0MS43MyA0OS43MyA5My4xNCAzOS4zOCA3Ny42Ii8+PC9zdmc+" alt="The Hebrew University of Jerusalem" class="huji-logo" />
+    </header>
+
+    <main class="layout">
+      <section class="panel controls">
+        <a id="simTitle" class="sim-title" href="https://en.wikipedia.org/wiki/Schelling%27s_model_of_segregation" target="_blank" rel="noopener">Schelling's Model of Segregation</a>
+        <h2>Controls</h2>
+
+        <div class="control-group" id="gridSizeGroup">
+          <label for="gridSize">Grid size: <span id="gridSizeValue">40</span> × <span id="gridSizeValue2">40</span></label>
+          <input id="gridSize" type="range" min="10" max="120" step="1" value="40" />
+        </div>
+
+        <div class="control-group" id="densityGroup">
+          <label for="density">Occupancy (% filled): <span id="densityValue">90</span>%</label>
+          <input id="density" type="range" min="0" max="100" step="1" value="90" />
+        </div>
+
+        <div id="schellingPanel" class="sim-panel" role="tabpanel" aria-labelledby="tabSchelling">
+          <div class="control-group">
+            <label for="ratioA">Type A ratio (of agents): <span id="ratioAValue">50</span>%</label>
+            <input id="ratioA" type="range" min="0" max="100" step="1" value="50" />
+          </div>
+
+          <div class="control-group">
+            <label for="tolerance">Minimum similar neighbors: <span id="toleranceValue">50</span>%</label>
+            <input id="tolerance" type="range" min="0" max="100" step="1" value="50" />
+            <small>Agents are satisfied if at least this percent of neighbors are the same type.</small>
+          </div>
+        </div>
+
+        <div id="lifePanel" class="sim-panel" role="tabpanel" aria-labelledby="tabLife" hidden>
+          <div class="control-group">
+            <label for="lifePattern">Initial pattern</label>
+            <select id="lifePattern">
+              <option value="random" selected>Random</option>
+              <option value="glider">Glider</option>
+              <option value="blinker">Blinker</option>
+              <option value="pulsar">Pulsar</option>
+              <option value="gosper">Gosper Glider Gun</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="boidsPanel" class="sim-panel" role="tabpanel" aria-labelledby="tabBoids" hidden>
+          <div class="row">
+            <div class="control-group sm">
+              <label for="boidsCount">Boids: <span id="boidsCountValue">150</span></label>
+              <input id="boidsCount" type="range" min="10" max="1000" step="10" value="150" />
+            </div>
+            <div class="control-group sm">
+              <label for="perception">Perception radius: <span id="perceptionValue">50</span></label>
+              <input id="perception" type="range" min="10" max="200" step="5" value="50" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="control-group sm">
+              <label for="separationDist">Separation distance: <span id="separationDistValue">20</span></label>
+              <input id="separationDist" type="range" min="5" max="100" step="1" value="20" />
+            </div>
+            <div class="control-group sm">
+              <label for="maxSpeed">Max speed: <span id="maxSpeedValue">2.5</span></label>
+              <input id="maxSpeed" type="range" min="0.5" max="6" step="0.1" value="2.5" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="control-group sm">
+              <label for="maxForce">Max force: <span id="maxForceValue">0.05</span></label>
+              <input id="maxForce" type="range" min="0.01" max="0.5" step="0.01" value="0.05" />
+            </div>
+            <div class="control-group sm"></div>
+          </div>
+          <div class="row">
+            <div class="control-group sm">
+              <label for="weightSep">Separation weight: <span id="weightSepValue">1.5</span></label>
+              <input id="weightSep" type="range" min="0" max="3" step="0.1" value="1.5" />
+            </div>
+            <div class="control-group sm">
+              <label for="weightAlign">Alignment weight: <span id="weightAlignValue">1.0</span></label>
+              <input id="weightAlign" type="range" min="0" max="3" step="0.1" value="1.0" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="control-group sm">
+              <label for="weightCoh">Cohesion weight: <span id="weightCohValue">1.0</span></label>
+              <input id="weightCoh" type="range" min="0" max="3" step="0.1" value="1.0" />
+            </div>
+            <div class="control-group sm"></div>
+          </div>
+          
+        </div>
+
+        <div class="row">
+          <div class="control-group sm">
+            <label for="delay">Step delay (ms): <span id="delayValue">100</span></label>
+            <input id="delay" type="range" min="0" max="1000" step="10" value="100" />
+          </div>
+          <div class="control-group sm">
+            <label for="maxIterations">Max steps</label>
+            <input id="maxIterations" type="number" min="1" max="20000" step="1" value="5000" />
+          </div>
+        </div>
+
+        <div class="row">
+          <label class="checkbox">
+            <input id="wrapEdges" type="checkbox" />
+            <span>Wrap edges (toroidal)</span>
+          </label>
+        </div>
+        <div class="row" id="unsatRow">
+          <label class="checkbox">
+            <input id="showUnsatisfied" type="checkbox" checked />
+            <span>Show unsatisfied markers</span>
+          </label>
+        </div>
+
+        <div class="buttons">
+          <button id="initializeBtn" class="btn" title="Initialize a new random grid">Initialize</button>
+          <div class="btn-right">
+            <button id="stepBtn" class="btn fixed" title="Advance one step">
+              <span class="icon" aria-hidden="true">
+                <svg viewBox="0 0 16 16"><path d="M10 2v12h2V2h-2zM2 2v12l7-6-7-6z"/></svg>
+              </span>
+              <span class="label">Step</span>
+            </button>
+            <button id="runBtn" class="btn danger fixed" title="Run until convergence with delay">
+              <span class="icon" aria-hidden="true">
+                <svg class="play" viewBox="0 0 16 16"><path d="M3 2v12l10-6L3 2z"/></svg>
+                <svg class="pause" viewBox="0 0 16 16"><path d="M3 2h4v12H3zM9 2h4v12H9z"/></svg>
+              </span>
+              <span class="label">Run</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="stats">
+          <div class="stat"><span class="label">Step</span><span id="statStep">0</span></div>
+          <div class="stat"><span class="label">Agents</span><span id="statAgents">0</span></div>
+          <div class="stat"><span class="label">Unsatisfied</span><span id="statUnsatisfied">0</span></div>
+          <div class="stat"><span class="label">Satisfied</span><span id="statSatisfied">0%</span></div>
+          <div class="stat"><span class="label">Moved (last)</span><span id="statMoved">0</span></div>
+        </div>
+      </section>
+
+      <section class="panel canvas-panel">
+        <div class="canvas-header">
+          <div class="legend" id="schellingLegend">
+            <div class="legend-item"><span class="chip a"></span>Type A</div>
+            <div class="legend-item"><span class="chip b"></span>Type B</div>
+            <div class="legend-item"><span class="chip empty"></span>Empty</div>
+          </div>
+          <div class="legend" id="lifeLegend" hidden>
+            <div class="legend-item"><span class="chip life-alive"></span>Alive</div>
+            <div class="legend-item"><span class="chip life-dead"></span>Dead</div>
+          </div>
+          <div class="legend" id="boidsLegend" hidden>
+            <div class="legend-item"><span class="chip life-alive"></span>Boid</div>
+          </div>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="gridCanvas" width="900" height="900" aria-label="Schelling grid" role="img"></canvas>
+        </div>
+      </section>
+
+      <aside class="panel rules">
+        <h2>Model Rules</h2>
+
+        <div id="schellingRules">
+          <h3>Core Rules</h3>
+          <ul>
+            <li><b>Agents:</b> Two types: A (blue) and B (red). Empty cells are gray.</li>
+            <li><b>Neighborhood:</b> Moore neighborhood (8 surrounding cells).</li>
+            <li><b>Tolerance:</b> An agent is satisfied if at least the selected percent of its non-empty neighbors are the same type.</li>
+            <li><b>No neighbors:</b> Agents with zero neighbors are considered satisfied.</li>
+            <li><b>Update rule:</b> In each iteration, all unsatisfied agents relocate in parallel to randomly chosen empty cells.</li>
+            <li><b>Convergence:</b> Reached when no agents are unsatisfied or no empty cells remain.</li>
+          </ul>
+          <h3>Simulation Options</h3>
+          <ul>
+            <li><b>Wrap edges:</b> When enabled, the grid is a torus; when disabled, borders are bounds. Manual moves and distance calculations respect this.</li>
+            <li><b>Step/Run:</b> Advance one iteration or run until convergence using the model’s update rule.</li>
+            <li><b>Manual move:</b> Clicking an unsatisfied agent moves it to the nearest empty cell that would satisfy it (if any); otherwise to a random empty cell.</li>
+            <li><b>Markers:</b> Toggle <i>Show unsatisfied markers</i> to highlight agents that want to move.</li>
+          </ul>
+        </div>
+
+        <div id="lifeRules" hidden>
+          <h3>Core Rules</h3>
+          <ul>
+            <li><b>Cells:</b> Each cell is either <i>alive</i> or <i>dead</i>.</li>
+            <li><b>Neighborhood:</b> Moore neighborhood (8 surrounding cells).</li>
+            <li><b>Birth:</b> A dead cell with exactly 3 live neighbors becomes alive.</li>
+            <li><b>Survival:</b> A live cell with 2 or 3 live neighbors stays alive; otherwise it dies.</li>
+            <li><b>Sync update:</b> All cells update simultaneously each step.</li>
+          </ul>
+          <h3>Simulation Options</h3>
+          <ul>
+            <li><b>Wrap edges:</b> When enabled, the grid is a torus; when disabled, borders are bounds.</li>
+            <li><b>Step/Run:</b> Advance a single generation or continuously with a delay.</li>
+            <li><b>Initialize:</b> Use <i>Occupancy</i> for random seeds or pick a preset pattern (Glider, Blinker, Pulsar, Gosper Gun).</li>
+            <li><b>Edit:</b> Click the grid to toggle cells alive/dead.</li>
+          </ul>
+        </div>
+
+        <div id="boidsRules" hidden>
+          <h3>Core Rules</h3>
+          <ul>
+            <li><b>Agents:</b> Boids move in continuous space with position and velocity.</li>
+            <li><b>Perception:</b> Each boid senses neighbors within a radius.</li>
+            <li><b>Separation:</b> Steer to avoid crowding neighbors closer than a separation distance.</li>
+            <li><b>Alignment:</b> Steer towards the average direction of nearby boids.</li>
+            <li><b>Cohesion:</b> Steer towards the average position (center) of nearby boids.</li>
+            <li><b>Limits:</b> Acceleration is limited by <i>max force</i>, speed by <i>max speed</i>.</li>
+          </ul>
+          <h3>Simulation Options</h3>
+          <ul>
+            <li><b>Wrap edges:</b> When enabled, boids wrap around; otherwise they bounce at borders.</li>
+            <li><b>Sliders:</b> Control boid count, perception radius, separation distance, and weights.</li>
+            <li><b>Interaction:</b> Click to add or remove boids (coming soon).</li>
+          </ul>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="app-footer">
+      <span>Built for demos and simulations in Animal Behavior.</span>
+    </footer>
+
+    <script>
 /*
   Schelling's Model of Segregation — Interactive Simulation
   - Two agent types (A/B), 0 = empty
@@ -1021,3 +1457,7 @@
   if (typeof updateSimTitle === 'function') updateSimTitle();
   drawGrid();
 })();
+
+</script>
+  </body>
+  </html>

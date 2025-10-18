@@ -4,13 +4,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Animal Behavior — Schelling's Model</title>
-    <link rel="icon" type="image/svg+xml" href="./icon.svg" />
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="icon" type="image/svg+xml" href="./web/icon.svg" />
+    <link rel="stylesheet" href="./web/styles.css" />
   </head>
   <body>
     <header class="app-header">
       <div class="brand">
-        <img src="./icon.svg" alt="Animal Behavior icon" class="app-icon" />
+        <img src="./web/icon.svg" alt="Animal Behavior icon" class="app-icon" />
         <div class="titles">
           <h1>Animal Behavior Simulations</h1>
           <p class="subtitle">A HUJI Course on Animal Behavior and Cognition</p>
@@ -22,7 +22,7 @@
         <button id="tabLife" class="tab tab-life" role="tab" aria-selected="false" aria-controls="lifePanel">Game of Life</button>
         <button id="tabBoids" class="tab tab-boids" role="tab" aria-selected="false" aria-controls="boidsPanel">Boids</button>
       </div>
-      <img src="./huji-logo.svg" alt="The Hebrew University of Jerusalem" class="huji-logo" />
+      <img src="./web/huji-logo.svg" alt="The Hebrew University of Jerusalem" class="huji-logo" />
     </header>
 
     <main class="layout">
@@ -30,12 +30,12 @@
         <a id="simTitle" class="sim-title" href="https://en.wikipedia.org/wiki/Schelling%27s_model_of_segregation" target="_blank" rel="noopener">Schelling's Model of Segregation</a>
         <h2>Controls</h2>
 
-        <div class="control-group">
+        <div class="control-group" id="gridSizeGroup">
           <label for="gridSize">Grid size: <span id="gridSizeValue">40</span> × <span id="gridSizeValue2">40</span></label>
           <input id="gridSize" type="range" min="10" max="120" step="1" value="40" />
         </div>
 
-        <div class="control-group">
+        <div class="control-group" id="densityGroup">
           <label for="density">Occupancy (% filled): <span id="densityValue">90</span>%</label>
           <input id="density" type="range" min="0" max="100" step="1" value="90" />
         </div>
@@ -111,6 +111,7 @@
             </div>
             <div class="control-group sm"></div>
           </div>
+          
         </div>
 
         <div class="row">
@@ -249,6 +250,6 @@
       <span>Built for demos and simulations in Animal Behavior.</span>
     </footer>
 
-    <script src="./schelling.js"></script>
+    <script src="./web/simulations.js"></script>
   </body>
   </html>

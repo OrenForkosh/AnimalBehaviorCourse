@@ -8,11 +8,11 @@ Currently included:
 
 ## Quick Start
 
-Open `web/index.html` directly in your browser, or serve the `web/` folder with a local server:
+Open `index.html` directly in your browser, or serve the folder with a local server:
 
 ```
-python3 -m http.server --directory web 8080
-# then visit http://localhost:8080
+python3 -m http.server 8080
+# then visit http://localhost:8080/index.html
 ```
 
 No build step or external dependencies are required.
