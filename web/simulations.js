@@ -38,9 +38,11 @@
     tabSchelling: document.getElementById('tabSchelling'),
     tabLife: document.getElementById('tabLife'),
     tabBoids: document.getElementById('tabBoids'),
+    tabFireflies: document.getElementById('tabFireflies'),
     schellingPanel: document.getElementById('schellingPanel'),
     lifePanel: document.getElementById('lifePanel'),
     boidsPanel: document.getElementById('boidsPanel'),
+    firefliesPanel: document.getElementById('firefliesPanel'),
     lifePattern: document.getElementById('lifePattern'),
     unsatRow: document.getElementById('unsatRow'),
     schellingRules: document.getElementById('schellingRules'),
@@ -49,6 +51,7 @@
     schellingLegend: document.getElementById('schellingLegend'),
     lifeLegend: document.getElementById('lifeLegend'),
     boidsLegend: document.getElementById('boidsLegend'),
+    firefliesLegend: document.getElementById('firefliesLegend'),
     // Boids controls
     boidsCount: document.getElementById('boidsCount'),
     boidsCountValue: document.getElementById('boidsCountValue'),
@@ -66,6 +69,28 @@
     weightAlignValue: document.getElementById('weightAlignValue'),
     weightCoh: document.getElementById('weightCoh'),
     weightCohValue: document.getElementById('weightCohValue'),
+    // Schelling edit tools
+    schellingEditEnabled: document.getElementById('schellingEditEnabled'),
+    schellingClearBtn: document.getElementById('schellingClearBtn'),
+    // Life edit tools
+    lifeEditEnabled: document.getElementById('lifeEditEnabled'),
+    lifeClearBtn: document.getElementById('lifeClearBtn'),
+    boidsTrails: document.getElementById('boidsTrails'),
+    trailPersistence: document.getElementById('trailPersistence'),
+    trailPersistenceValue: document.getElementById('trailPersistenceValue'),
+    mouseForce: document.getElementById('mouseForce'),
+    mouseForceValue: document.getElementById('mouseForceValue'),
+    wAvoid: document.getElementById('wAvoid'),
+    wAvoidValue: document.getElementById('wAvoidValue'),
+    // Fireflies controls
+    ffRadius: document.getElementById('ffRadius'),
+    ffRadiusValue: document.getElementById('ffRadiusValue'),
+    ffCoupling: document.getElementById('ffCoupling'),
+    ffCouplingValue: document.getElementById('ffCouplingValue'),
+    ffPeriod: document.getElementById('ffPeriod'),
+    ffPeriodValue: document.getElementById('ffPeriodValue'),
+    ffJitter: document.getElementById('ffJitter'),
+    ffJitterValue: document.getElementById('ffJitterValue'),
   };
 
   // Utility: RNG and shuffle
@@ -76,8 +101,34 @@
     }
   }
 
-  // Boids model
-  class LifeLikeBoidsPlaceholder {}
+  // Mouse tracking for Boids
+  let mousePos = { x: 0, y: 0, inside: false };
+
+  // Drag-to-paint state
+  let dragging = false;
+  let didDrag = false;
+  let paintedSet = new Set();
+  let paintTarget = null; // target state chosen on first press
+
+  function applyEditAtCell(cellX, cellY) {
+    if (!model) return false;
+    if (currentSim === 'schelling') {
+      if (!(els.schellingEditEnabled && els.schellingEditEnabled.checked)) return false;
+      const idx = model.index(cellX, cellY);
+      const v = model.grid[idx];
+      const nv = (dragging && paintTarget !== null) ? paintTarget : (v === 0 ? 1 : (v === 1 ? 2 : 0));
+      if (nv !== v) { model.grid[idx] = nv; return true; }
+      return false;
+    } else if (currentSim === 'life') {
+      const idx = model.index(cellX, cellY);
+      const v = model.grid[idx];
+      const nv = (dragging && paintTarget !== null) ? paintTarget : (v ? 0 : 1);
+      if (nv !== v) { model.grid[idx] = nv; return true; }
+      return false;
+    }
+    return false;
+  }
+
 
   class BoidsModel {
     constructor(opts) {
@@ -88,7 +139,10 @@
       this.maxSpeed = opts.maxSpeed;
       this.maxForce = opts.maxForce;
       this.wSep = opts.wSep; this.wAlign = opts.wAlign; this.wCoh = opts.wCoh;
+      this.wAvoid = opts.wAvoid ?? 1.2;
+      this.mouseForce = opts.mouseForce ?? 0;
       this.boids = [];
+      this.obstacles = [];
       for (let i = 0; i < opts.count; i++) {
         this.boids.push({
           x: Math.random() * this.width,
@@ -100,6 +154,17 @@
       this.stepCount = 0;
     }
     count() { return this.boids.length; }
+    addObstacle(x, y, r=24) { this.obstacles.push({ x, y, r }); }
+    removeNearestObstacle(x, y) {
+      if (!this.obstacles.length) return;
+      let best = 0, bestD2 = Infinity;
+      for (let i=0;i<this.obstacles.length;i++) {
+        const o = this.obstacles[i];
+        const dx = o.x - x, dy = o.y - y; const d2 = dx*dx + dy*dy;
+        if (d2 < bestD2) { best = i; bestD2 = d2; }
+      }
+      this.obstacles.splice(best,1);
+    }
     step() {
       const b = this.boids;
       const n = b.length;
@@ -108,7 +173,7 @@
         let steerSepX = 0, steerSepY = 0;
         let alignX = 0, alignY = 0, alignCount = 0;
         let cohX = 0, cohY = 0, cohCount = 0;
-        
+        let avoidX = 0, avoidY = 0;
         for (let j = 0; j < n; j++) {
           if (i === j) continue;
           const other = b[j];
@@ -149,8 +214,22 @@
         const sepMag = Math.hypot(steerSepX, steerSepY) || 0;
         if (sepMag > 0) { steerSepX = (steerSepX/sepMag)*this.maxSpeed - me.vx; steerSepY = (steerSepY/sepMag)*this.maxSpeed - me.vy; }
 
-        let ax = this.wSep * steerSepX + this.wAlign * alignX + this.wCoh * cohX;
-        let ay = this.wSep * steerSepY + this.wAlign * alignY + this.wCoh * cohY;
+        // Mouse attraction/repulsion
+        let mAX = 0, mAY = 0;
+        if (this.mouseForce && mousePos.inside) {
+          let dx = mousePos.x - me.x, dy = mousePos.y - me.y;
+          if (this.wrapEdges) {
+            if (Math.abs(dx) > this.width/2) dx -= Math.sign(dx) * this.width;
+            if (Math.abs(dy) > this.height/2) dy -= Math.sign(dy) * this.height;
+          }
+          const d = Math.hypot(dx, dy) || 1e-6;
+          const dirX = dx / d, dirY = dy / d;
+          mAX = dirX * this.mouseForce;
+          mAY = dirY * this.mouseForce;
+        }
+
+        let ax = this.wSep * steerSepX + this.wAlign * alignX + this.wCoh * cohX + this.wAvoid * avoidX + mAX;
+        let ay = this.wSep * steerSepY + this.wAlign * alignY + this.wCoh * cohY + this.wAvoid * avoidY + mAY;
         const aMag = Math.hypot(ax, ay) || 0;
         if (aMag > this.maxForce) { ax = ax / aMag * this.maxForce; ay = ay / aMag * this.maxForce; }
 
@@ -169,6 +248,87 @@
       this.stepCount++;
       return { changed: true };
     }
+  }
+  // Fireflies model (grid-based Kuramoto-like coupling)
+  class FirefliesModel {
+    constructor(size, densityPct, wrapEdges, radius, coupling, basePeriod, jitterPct) {
+      this.size = size | 0;
+      this.wrapEdges = !!wrapEdges;
+      this.grid = new Uint8Array(this.size * this.size); // 0 empty, 1 firefly
+      this.theta = new Float32Array(this.size * this.size); // phase [0, 2pi)
+      this.omega = new Float32Array(this.size * this.size); // natural freq (rad/step)
+      this.flash = new Uint8Array(this.size * this.size); // flash cooldown frames
+      this.radius = Math.max(1, radius|0);
+      this.coupling = Math.max(0, Math.min(1, coupling));
+      this.basePeriod = Math.max(1, basePeriod|0);
+      this.jitter = Math.max(0, Math.min(1, (jitterPct||0)/100));
+      this.stepCount = 0;
+      this.randomize(densityPct);
+    }
+    index(x,y){return y*this.size+x;}
+    inBounds(x,y){return x>=0&&y>=0&&x<this.size&&y<this.size;}
+    randomize(densityPct){
+      const p = Math.max(0, Math.min(100, densityPct))/100;
+      const n = this.size*this.size;
+      for (let i=0;i<n;i++) {
+        const present = Math.random() < p ? 1 : 0;
+        this.grid[i] = present;
+        // random initial phase
+        this.theta[i] = Math.random()*Math.PI*2;
+        // natural period with jitter
+        const u = (Math.random()*2 - 1) * this.jitter; // [-jitter, +jitter]
+        const Ti = this.basePeriod * (1 + u);
+        this.omega[i] = (Math.PI*2) / Math.max(1e-3, Ti);
+        this.flash[i] = 0;
+      }
+    }
+    step(){
+      const n = this.size;
+      const R = this.radius;
+      const K = this.coupling;
+      let flashed = 0;
+      // compute phase increments with local coupling
+      const dtheta = new Float32Array(n*n);
+      for (let y=0;y<n;y++){
+        for (let x=0;x<n;x++){
+          const idx = this.index(x,y);
+          if (!this.grid[idx]) { dtheta[idx]=0; continue; }
+          const th = this.theta[idx];
+          let sum = 0; let count = 0;
+          for (let dy=-R; dy<=R; dy++){
+            for (let dx=-R; dx<=R; dx++){
+              if (dx===0 && dy===0) continue;
+              let nx = x+dx, ny = y+dy;
+              if (this.wrapEdges) { nx=(nx+n)%n; ny=(ny+n)%n; }
+              else if (!this.inBounds(nx,ny)) continue;
+              const j = this.index(nx,ny);
+              if (!this.grid[j]) continue;
+              // Kuramoto coupling contribution sin(theta_j - theta_i)
+              const diff = this.theta[j] - th;
+              sum += Math.sin(diff);
+              count++;
+            }
+          }
+          const meanCouple = count>0 ? (sum / count) : 0;
+          dtheta[idx] = this.omega[idx] + K * meanCouple;
+        }
+      }
+      // integrate and detect flashes
+      for (let i=0;i<n*n;i++){
+        if (!this.grid[i]) { if (this.flash[i]>0) this.flash[i]=0; continue; }
+        let th = this.theta[i] + dtheta[i];
+        if (th >= Math.PI*2) {
+          th -= Math.PI*2;
+          this.flash[i] = 6; // frames to show flash
+          flashed++;
+        }
+        this.theta[i] = th;
+        if (this.flash[i]>0) this.flash[i]--;
+      }
+      this.stepCount++;
+      return { changed: true, flashed };
+    }
+    countAgents(){ let a=0; for (let i=0;i<this.grid.length;i++) if (this.grid[i]) a++; return a; }
   }
   // Conway's Game of Life model
   class LifeModel {
@@ -441,11 +601,11 @@
   let model = null;
   let currentSim = 'schelling';
   // Per-simulation defaults/state for Wrap edges
-  let simWrap = { schelling: false, life: true, boids: true };
+  let simWrap = { schelling: false, life: true, boids: true, fireflies: true };
   // Remember per-sim density (occupancy) preferences; defaults: Schelling 90, Life 50
-  let simDensity = { schelling: 90, life: 50, boids: 50 };
+  let simDensity = { schelling: 90, life: 50, boids: 50, fireflies: 80 };
   // Remember per-sim step delay (ms); default Boids=50, others=100
-  let simDelay = { schelling: 100, life: 100, boids: 50 };
+  let simDelay = { schelling: 100, life: 100, boids: 50, fireflies: 50 };
   let cellSize = 10; // pixels
   let view = { offsetX: 0, offsetY: 0, width: 0, height: 0 };
   let lastMove = null; // { from:{x,y}, to:{x,y}, time:number }
@@ -467,14 +627,33 @@
 
     // Boids: draw in pixel space and return
     if (currentSim === 'boids') {
-      // Hard clear background
-      ctx.fillStyle = '#0c0f14';
-      ctx.fillRect(0, 0, w, h);
+      // Trails fade or clear
+      const trailsOn = els.boidsTrails && els.boidsTrails.checked;
+      if (trailsOn) {
+        const persistence = Math.max(0, Math.min(100, parseInt(els.trailPersistence.value || '80', 10))) / 100;
+        const fadeAlpha = Math.max(0.02, 1 - persistence);
+        ctx.fillStyle = '#0c0f14';
+        ctx.globalAlpha = fadeAlpha * 0.35;
+        ctx.fillRect(0, 0, w, h);
+        ctx.globalAlpha = 1;
+      } else {
+        ctx.fillStyle = '#0c0f14';
+        ctx.fillRect(0, 0, w, h);
+      }
       view = { offsetX: 0, offsetY: 0, width: w, height: h };
+      // Obstacles
+      if (model.obstacles && model.obstacles.length) {
+        ctx.strokeStyle = 'rgba(236, 72, 153, 0.85)';
+        ctx.fillStyle = 'rgba(236, 72, 153, 0.08)';
+        for (const o of model.obstacles) {
+          ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, Math.PI*2);
+          ctx.fill(); ctx.stroke();
+        }
+      }
       for (const boid of model.boids) {
         const angle = Math.atan2(boid.vy, boid.vx);
         const sizePx = 6 + Math.min(10, Math.hypot(boid.vx, boid.vy));
-        ctx.fillStyle = '#f59e0b';
+        ctx.fillStyle = '#f472b6';
         ctx.beginPath();
         ctx.moveTo(boid.x + Math.cos(angle) * sizePx, boid.y + Math.sin(angle) * sizePx);
         ctx.lineTo(boid.x + Math.cos(angle + 2.5) * sizePx * 0.6, boid.y + Math.sin(angle + 2.5) * sizePx * 0.6);
@@ -511,12 +690,35 @@
           ctx.fillRect(offsetX + x * cellSize, offsetY + y * cellSize, cellSize, cellSize);
         }
       }
-    } else {
+    } else if (currentSim === 'life') {
       for (let y = 0; y < size; y++) {
         for (let x = 0; x < size; x++) {
           const alive = model.grid[model.index(x, y)] === 1;
           ctx.fillStyle = alive ? '#7ee7c4' : '#1a1f2c';
           ctx.fillRect(offsetX + x * cellSize, offsetY + y * cellSize, cellSize, cellSize);
+        }
+      }
+    } else if (currentSim === 'fireflies') {
+      for (let y=0; y<size; y++){
+        for (let x=0; x<size; x++){
+          const idx = model.index(x,y);
+          const present = model.grid[idx] === 1;
+          if (!present) { ctx.fillStyle = '#1a1f2c'; }
+          else {
+            const flashing = model.flash[idx] > 0;
+            if (flashing) ctx.fillStyle = '#fde047';
+            else {
+              // dim yellow based on phase (brighter near flash)
+              const phase = model.theta[idx] / (Math.PI*2); // 0..1
+              const intensity = 0.25 + 0.5 * (1 - Math.cos(phase * Math.PI*2)) * 0.5;
+              const base = 0x47; // yellow-ish low
+              const r = Math.min(255, Math.floor(253 * intensity));
+              const g = Math.min(255, Math.floor(224 * intensity));
+              const b = Math.min(255, Math.floor(71 * intensity));
+              ctx.fillStyle = `rgb(${r},${g},${b})`;
+            }
+          }
+          ctx.fillRect(offsetX + x*cellSize, offsetY + y*cellSize, cellSize, cellSize);
         }
       }
     }
@@ -670,9 +872,16 @@
       els.statAgents.textContent = String(count);
       els.statUnsatisfied.textContent = '-';
       els.statSatisfied.textContent = '-';
+    } else if (currentSim === 'fireflies') {
+      const agents = model.countAgents();
+      els.statAgents.textContent = String(agents);
+      els.statUnsatisfied.textContent = '-';
+      els.statSatisfied.textContent = '-';
     }
     if (typeof extra.moved === 'number') {
       els.statMoved.textContent = String(extra.moved);
+    } else if (typeof extra.flashed === 'number') {
+      els.statMoved.textContent = String(extra.flashed);
     }
   }
 
@@ -684,6 +893,10 @@
     els.ratioAValue.textContent = els.ratioA.value;
     els.toleranceValue.textContent = els.tolerance.value;
     els.delayValue.textContent = els.delay.value;
+    if (els.ffRadiusValue) els.ffRadiusValue.textContent = els.ffRadius.value;
+    if (els.ffCouplingValue) els.ffCouplingValue.textContent = parseFloat(els.ffCoupling.value||'0').toFixed(2);
+    if (els.ffPeriodValue) els.ffPeriodValue.textContent = els.ffPeriod.value;
+    if (els.ffJitterValue) els.ffJitterValue.textContent = els.ffJitter.value;
     if (els.boidsCountValue) els.boidsCountValue.textContent = els.boidsCount.value;
     if (els.perceptionValue) els.perceptionValue.textContent = els.perception.value;
     if (els.separationDistValue) els.separationDistValue.textContent = els.separationDist.value;
@@ -692,12 +905,15 @@
     if (els.weightSepValue) els.weightSepValue.textContent = els.weightSep.value;
     if (els.weightAlignValue) els.weightAlignValue.textContent = els.weightAlign.value;
     if (els.weightCohValue) els.weightCohValue.textContent = els.weightCoh.value;
+    if (els.trailPersistenceValue) els.trailPersistenceValue.textContent = els.trailPersistence.value;
+    if (els.mouseForceValue) els.mouseForceValue.textContent = parseFloat(els.mouseForce.value || '0').toFixed(1);
+    if (els.wAvoidValue) els.wAvoidValue.textContent = els.wAvoid.value;
   }
 
   [els.gridSize, els.density, els.ratioA, els.tolerance, els.delay].forEach(inp => {
     inp.addEventListener('input', syncLabels);
   });
-  [els.boidsCount, els.perception, els.separationDist, els.maxSpeed, els.maxForce, els.weightSep, els.weightAlign, els.weightCoh].forEach(inp => {
+  [els.boidsCount, els.perception, els.separationDist, els.maxSpeed, els.maxForce, els.weightSep, els.weightAlign, els.weightCoh, els.trailPersistence, els.mouseForce, els.wAvoid, els.ffRadius, els.ffCoupling, els.ffPeriod, els.ffJitter].forEach(inp => {
     if (!inp) return;
     inp.addEventListener('input', syncLabels);
   });
@@ -728,9 +944,21 @@
         wSep: parseFloat(els.weightSep.value) || 1.5,
         wAlign: parseFloat(els.weightAlign.value) || 1.0,
         wCoh: parseFloat(els.weightCoh.value) || 1.0,
+        wAvoid: parseFloat(els.wAvoid.value) || 1.2,
+        mouseForce: parseFloat(els.mouseForce.value) || 0,
         wrapEdges: wrap,
       };
       model = new BoidsModel(opts);
+    } else if (currentSim === 'fireflies') {
+      const radiusParsed = parseInt(els.ffRadius.value, 10);
+      const radius = Number.isFinite(radiusParsed) ? radiusParsed : 3;
+      const couplingParsed = parseFloat(els.ffCoupling.value);
+      const coupling = Number.isFinite(couplingParsed) ? couplingParsed : 0.2; // allow 0 exactly
+      const basePeriodParsed = parseInt(els.ffPeriod.value, 10);
+      const basePeriod = Number.isFinite(basePeriodParsed) ? basePeriodParsed : 60;
+      const jitterParsed = parseInt(els.ffJitter.value, 10);
+      const jitter = Number.isFinite(jitterParsed) ? jitterParsed : 20;
+      model = new FirefliesModel(size, density, wrap, radius, coupling, basePeriod, jitter);
     }
     fitCanvasToDisplay();
     drawGrid();
@@ -754,7 +982,7 @@
     inp.addEventListener('change', autoInit);
   });
   // Auto re-init for boids controls
-  ;[els.boidsCount, els.perception, els.separationDist, els.maxSpeed, els.maxForce, els.weightSep, els.weightAlign, els.weightCoh].forEach(inp => {
+  ;[els.boidsCount, els.perception, els.separationDist, els.maxSpeed, els.maxForce, els.weightSep, els.weightAlign, els.weightCoh, els.trailPersistence, els.mouseForce, els.wAvoid, els.ffRadius, els.ffCoupling, els.ffPeriod, els.ffJitter].forEach(inp => {
     if (!inp) return;
     inp.addEventListener('input', debouncedAutoInit);
     inp.addEventListener('change', autoInit);
@@ -859,7 +1087,11 @@
   // Event listeners
   els.initializeBtn.addEventListener('click', (e) => {
     e.preventDefault();
-    if (running) { running = false; els.runBtn.textContent = 'Run'; }
+    if (running) {
+      running = false;
+      if (els.runBtnLabel) els.runBtnLabel.textContent = 'Run';
+      if (els.runBtn) els.runBtn.classList.remove('running');
+    }
     initModelFromControls();
   });
   els.stepBtn.addEventListener('click', (e) => {
@@ -881,7 +1113,28 @@
 
   // Simulation tabs and pattern
   function setSim(sim) {
-    if (sim === currentSim) return;
+    // Helper: update URL's sim query param without reloading
+    function updateURLSim(val) {
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('sim', val);
+        history.replaceState(null, '', url.toString());
+      } catch (_) {}
+    }
+    // If switching to the same sim and no model yet (e.g., first load), ensure init
+    if (sim === currentSim) {
+      if (!model) {
+        // Ensure classes/labels are in a consistent state then init
+        document.body.classList.toggle('sim-schelling', sim === 'schelling');
+        document.body.classList.toggle('sim-life', sim === 'life');
+        document.body.classList.toggle('sim-boids', sim === 'boids');
+        if (typeof updateSimTitle === 'function') updateSimTitle();
+        autoInit();
+      }
+      // Even if already current, reflect in URL (e.g., user clicks active tab)
+      updateURLSim(sim);
+      return;
+    }
     // Store current density and wrap under currentSim
     if (els.density) {
       const curVal = parseInt(els.density.value, 10);
@@ -900,6 +1153,7 @@
     document.body.classList.toggle('sim-schelling', sim === 'schelling');
     document.body.classList.toggle('sim-life', sim === 'life');
     document.body.classList.toggle('sim-boids', sim === 'boids');
+    document.body.classList.toggle('sim-fireflies', sim === 'fireflies');
     // Apply target sim default/last density
     if (els.density) {
       const next = simDensity[sim] ?? (sim === 'life' ? 50 : 90);
@@ -924,9 +1178,13 @@
     if (els.tabBoids) {
       els.tabBoids.classList.toggle('active', sim === 'boids');
     }
+    if (els.tabFireflies) {
+      els.tabFireflies.classList.toggle('active', sim === 'fireflies');
+    }
     if (els.schellingPanel) els.schellingPanel.hidden = sim !== 'schelling';
     if (els.lifePanel) els.lifePanel.hidden = sim !== 'life';
     if (els.boidsPanel) els.boidsPanel.hidden = sim !== 'boids';
+    if (els.firefliesPanel) els.firefliesPanel.hidden = sim !== 'fireflies';
     if (els.unsatRow) els.unsatRow.style.display = (sim === 'schelling') ? '' : 'none';
     // Toggle common grid controls visibility (not used by Boids)
     const gridSizeGroup = document.getElementById('gridSizeGroup');
@@ -937,12 +1195,33 @@
     if (els.schellingRules) els.schellingRules.hidden = sim !== 'schelling';
     if (els.lifeRules) els.lifeRules.hidden = sim !== 'life';
     if (els.boidsRules) els.boidsRules.hidden = sim !== 'boids';
+    const fr = document.getElementById('firefliesRules'); if (fr) fr.hidden = sim !== 'fireflies';
     if (els.schellingLegend) els.schellingLegend.hidden = sim !== 'schelling';
     if (els.lifeLegend) els.lifeLegend.hidden = sim !== 'life';
     if (els.boidsLegend) els.boidsLegend.hidden = sim !== 'boids';
+    if (els.firefliesLegend) els.firefliesLegend.hidden = sim !== 'fireflies';
+    // Toggle Advanced per-sim blocks
+    const sa = document.getElementById('schellingAdvanced');
+    const la = document.getElementById('lifeAdvanced');
+    const ba = document.getElementById('boidsAdvanced');
+    const fa = document.getElementById('firefliesAdvanced');
+    if (sa) sa.hidden = sim !== 'schelling';
+    if (la) la.hidden = sim !== 'life';
+    if (ba) ba.hidden = sim !== 'boids';
+    if (fa) fa.hidden = sim !== 'fireflies';
     // Update the per-simulation title link
     updateSimTitle();
+    // Update rules Wikipedia link
+    const rulesWiki = document.getElementById('rulesWiki');
+    if (rulesWiki) {
+      if (sim === 'schelling') rulesWiki.href = 'https://en.wikipedia.org/wiki/Schelling%27s_model_of_segregation';
+      else if (sim === 'life') rulesWiki.href = 'https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life';
+      else if (sim === 'boids') rulesWiki.href = 'https://en.wikipedia.org/wiki/Boids';
+      else if (sim === 'fireflies') rulesWiki.href = 'https://en.wikipedia.org/wiki/Firefly_synchronization';
+    }
     autoInit();
+    // Reflect new selection in URL
+    updateURLSim(sim);
   }
   if (els.tabSchelling && els.tabLife) {
     els.tabSchelling.addEventListener('click', ()=>setSim('schelling'));
@@ -951,16 +1230,52 @@
   if (els.tabBoids) {
     els.tabBoids.addEventListener('click', ()=>setSim('boids'));
   }
+  if (els.tabFireflies) {
+    els.tabFireflies.addEventListener('click', ()=>setSim('fireflies'));
+  }
   if (els.lifePattern) {
     els.lifePattern.addEventListener('change', () => {
       if (currentSim === 'life') initModelFromControls();
+    });
+  }
+  // Keyboard shortcuts for Edit tools
+  document.addEventListener('keydown', (e) => {
+    // Ignore when typing in inputs/selects/textarea
+    const tag = (e.target && e.target.tagName) || '';
+    if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+    const k = (e.key || '').toLowerCase();
+    if (currentSim === 'schelling') {
+      if (!els.schellingEditEnabled) return;
+      if (k === 'a' || k === 'b' || k === 'e') { els.schellingEditEnabled.checked = true; e.preventDefault(); }
+    } else if (currentSim === 'life') {
+      if (!els.lifeEditEnabled) return;
+      if (k === 'a' || k === 'd' || k === 'e') { els.lifeEditEnabled.checked = true; e.preventDefault(); }
+    }
+  });
+  if (els.lifeClearBtn) {
+    els.lifeClearBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (currentSim !== 'life' || !model || !model.grid) return;
+      model.grid.fill(0);
+      drawGrid();
+      updateStats({});
+    });
+  }
+
+  if (els.schellingClearBtn) {
+    els.schellingClearBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (currentSim !== 'schelling' || !model || !model.grid) return;
+      model.grid.fill(0);
+      drawGrid();
+      updateStats({});
     });
   }
 
   // Sim title link updater
   function updateSimTitle() {
     if (!els.simTitle) return;
-    els.simTitle.classList.remove('schelling','life','boids');
+    els.simTitle.classList.remove('schelling','life','boids','fireflies');
     if (currentSim === 'schelling') {
       els.simTitle.textContent = "Schelling's Model of Segregation";
       els.simTitle.href = 'https://en.wikipedia.org/wiki/Schelling%27s_model_of_segregation';
@@ -973,36 +1288,100 @@
       els.simTitle.textContent = "Reynolds' Boids";
       els.simTitle.href = 'https://en.wikipedia.org/wiki/Boids';
       els.simTitle.classList.add('boids');
+    } else if (currentSim === 'fireflies') {
+      els.simTitle.textContent = "Fireflies Synchronization";
+      els.simTitle.href = 'https://en.wikipedia.org/wiki/Firefly_synchronization';
+      els.simTitle.classList.add('fireflies');
     }
   }
   // End sim switching
 
 
   els.canvas.addEventListener('click', (e) => {
+    if (didDrag) { didDrag = false; const b=document.getElementById('paintBadge'); if (b) b.hidden=true; return; }
     const cell = coordsToCell(e.clientX, e.clientY);
     if (currentSim === 'schelling') {
       if (!cell) return;
-      const res = moveOneIfUnsatisfied(cell.x, cell.y);
-      if (res && res.moved) {
-        lastMove = { from: res.from, to: res.to, time: Date.now() };
+      if (els.schellingEditEnabled && els.schellingEditEnabled.checked) {
+        const idx = model.index(cell.x, cell.y);
+        const v = model.grid[idx];
+        model.grid[idx] = v === 0 ? 1 : (v === 1 ? 2 : 0);
         drawGrid();
-        updateStats({ moved: 1 });
+        updateStats({});
+        const b=document.getElementById('paintBadge'); if (b) b.hidden=true;
+      } else {
+        const res = moveOneIfUnsatisfied(cell.x, cell.y);
+        if (res && res.moved) {
+          lastMove = { from: res.from, to: res.to, time: Date.now() };
+          drawGrid();
+          updateStats({ moved: 1 });
+        }
+        const b=document.getElementById('paintBadge'); if (b) b.hidden=true;
       }
     } else if (currentSim === 'life') {
       if (!cell) return;
-      // Toggle cell for Game of Life
       const idx = model.index(cell.x, cell.y);
+      // Toggle always in Life
       model.grid[idx] = model.grid[idx] ? 0 : 1;
       drawGrid();
       updateStats({});
+      const b=document.getElementById('paintBadge'); if (b) b.hidden=true;
     } else if (currentSim === 'boids') {
       const rect = els.canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      model.boids.push({ x, y, vx: (Math.random()*2-1)*model.maxSpeed, vy: (Math.random()*2-1)*model.maxSpeed });
+      if (e.shiftKey) model.addObstacle(x, y, 24);
+      else if (e.altKey) model.removeNearestObstacle(x, y);
+      else model.boids.push({ x, y, vx: (Math.random()*2-1)*model.maxSpeed, vy: (Math.random()*2-1)*model.maxSpeed });
       drawGrid();
     }
   });
+  // Mouse position for boids
+  els.canvas.addEventListener('mousemove', (e) => {
+    if (dragging && (currentSim === 'schelling' || currentSim === 'life')) {
+      const cell = coordsToCell(e.clientX, e.clientY);
+      if (cell) {
+        const idx = (currentSim === 'schelling') ? model.index(cell.x, cell.y) : model.index(cell.x, cell.y);
+        if (!paintedSet.has(idx)) {
+          if (applyEditAtCell(cell.x, cell.y)) {
+            paintedSet.add(idx); didDrag = true; drawGrid(); updateStats({});
+          }
+        }
+      }
+    }
+
+    const rect = els.canvas.getBoundingClientRect();
+    mousePos.x = e.clientX - rect.left;
+    mousePos.y = e.clientY - rect.top;
+    mousePos.inside = true;
+    const badge=document.getElementById('paintBadge');
+    if (badge && dragging && paintTarget!==null) { badge.style.left=mousePos.x+'px'; badge.style.top=mousePos.y+'px'; }
+  });
+  els.canvas.addEventListener('mouseleave', () => { mousePos.inside = false; dragging=false; paintTarget=null; paintedSet.clear(); const b=document.getElementById('paintBadge'); if(b) b.hidden=true; });
+
+  els.canvas.addEventListener('mousedown', (e) => {
+    if (currentSim === 'schelling' && els.schellingEditEnabled && els.schellingEditEnabled.checked) {
+      dragging = true; didDrag = false; paintedSet.clear();
+      const cell = coordsToCell(e.clientX, e.clientY);
+      if (cell) {
+        const idx = model.index(cell.x, cell.y);
+        const v = model.grid[idx]; paintTarget = (currentSim==='schelling') ? (v===0?1:(v===1?2:0)) : (v?0:1); const badge=document.getElementById('paintBadge'); if (badge) { badge.textContent = currentSim==='schelling' ? (paintTarget===1?'A':(paintTarget===2?'B':'Empty')) : (paintTarget===1?'Alive':'Dead'); badge.className = 'paint-badge ' + (currentSim==='schelling' ? (paintTarget===1?'paint-a':(paintTarget===2?'paint-b':'paint-empty')) : (paintTarget===1?'paint-alive':'paint-dead')); badge.hidden=false; } if (!paintedSet.has(idx) && applyEditAtCell(cell.x, cell.y)) {
+          paintedSet.add(idx); drawGrid(); updateStats({});
+        }
+      }
+    } else if (currentSim === 'life') {
+      dragging = true; didDrag = false; paintedSet.clear();
+      const cell = coordsToCell(e.clientX, e.clientY);
+      if (cell) {
+        const idx = model.index(cell.x, cell.y);
+        const v = model.grid[idx]; paintTarget = (v?0:1); const badge=document.getElementById('paintBadge'); if (badge) { badge.textContent = (paintTarget===1?'Alive':'Dead'); badge.hidden=false; } if (!paintedSet.has(idx) && applyEditAtCell(cell.x, cell.y)) {
+          paintedSet.add(idx); drawGrid(); updateStats({});
+        }
+      }
+    } else { dragging=false; paintedSet.clear(); }
+  });
+  window.addEventListener('mouseup', () => { if (dragging) { dragging=false; paintTarget=null; const b=document.getElementById('paintBadge'); if(b) b.hidden=true; if (paintedSet.size>0) didDrag=true; paintedSet.clear(); } });
+
 
   window.addEventListener('resize', () => {
     fitCanvasToDisplay();
@@ -1011,11 +1390,18 @@
 
   // Boot
   syncLabels();
-  // Set initial body class based on default simulation
-  document.body.classList.add('sim-schelling');
-  // Ensure per-sim default wrap is applied before first init
-  if (els.wrapEdges) els.wrapEdges.checked = !!simWrap[currentSim];
-  initModelFromControls();
+  // Initialize selected simulation from URL (?sim=schelling|life|boids)
+  (function(){
+    let initial = 'schelling';
+    try {
+      const url = new URL(window.location.href);
+      const s = (url.searchParams.get('sim') || '').toLowerCase();
+      if (s === 'schelling' || s === 'life' || s === 'boids' || s === 'fireflies') initial = s;
+    } catch(_) {}
+    setSim(initial);
+  })();
+  // If initial sim equals default and setSim returned early, ensure a model exists
+  if (!model) autoInit();
   fitCanvasToDisplay();
   // Ensure sim title reflects current selection
   if (typeof updateSimTitle === 'function') updateSimTitle();

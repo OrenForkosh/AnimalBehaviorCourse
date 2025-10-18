@@ -21,6 +21,7 @@
         <button id="tabSchelling" class="tab tab-schelling active" role="tab" aria-selected="true" aria-controls="schellingPanel">Schelling</button>
         <button id="tabLife" class="tab tab-life" role="tab" aria-selected="false" aria-controls="lifePanel">Game of Life</button>
         <button id="tabBoids" class="tab tab-boids" role="tab" aria-selected="false" aria-controls="boidsPanel">Boids</button>
+        <button id="tabFireflies" class="tab tab-fireflies" role="tab" aria-selected="false" aria-controls="firefliesPanel">Fireflies</button>
       </div>
       <img src="./web/huji-logo.svg" alt="The Hebrew University of Jerusalem" class="huji-logo" />
     </header>
@@ -28,116 +29,6 @@
     <main class="layout">
       <section class="panel controls">
         <a id="simTitle" class="sim-title" href="https://en.wikipedia.org/wiki/Schelling%27s_model_of_segregation" target="_blank" rel="noopener">Schelling's Model of Segregation</a>
-        <h2>Controls</h2>
-
-        <div class="control-group" id="gridSizeGroup">
-          <label for="gridSize">Grid size: <span id="gridSizeValue">40</span> × <span id="gridSizeValue2">40</span></label>
-          <input id="gridSize" type="range" min="10" max="120" step="1" value="40" />
-        </div>
-
-        <div class="control-group" id="densityGroup">
-          <label for="density">Occupancy (% filled): <span id="densityValue">90</span>%</label>
-          <input id="density" type="range" min="0" max="100" step="1" value="90" />
-        </div>
-
-        <div id="schellingPanel" class="sim-panel" role="tabpanel" aria-labelledby="tabSchelling">
-          <div class="control-group">
-            <label for="ratioA">Type A ratio (of agents): <span id="ratioAValue">50</span>%</label>
-            <input id="ratioA" type="range" min="0" max="100" step="1" value="50" />
-          </div>
-
-          <div class="control-group">
-            <label for="tolerance">Minimum similar neighbors: <span id="toleranceValue">50</span>%</label>
-            <input id="tolerance" type="range" min="0" max="100" step="1" value="50" />
-            <small>Agents are satisfied if at least this percent of neighbors are the same type.</small>
-          </div>
-        </div>
-
-        <div id="lifePanel" class="sim-panel" role="tabpanel" aria-labelledby="tabLife" hidden>
-          <div class="control-group">
-            <label for="lifePattern">Initial pattern</label>
-            <select id="lifePattern">
-              <option value="random" selected>Random</option>
-              <option value="glider">Glider</option>
-              <option value="blinker">Blinker</option>
-              <option value="pulsar">Pulsar</option>
-              <option value="gosper">Gosper Glider Gun</option>
-            </select>
-          </div>
-        </div>
-
-        <div id="boidsPanel" class="sim-panel" role="tabpanel" aria-labelledby="tabBoids" hidden>
-          <div class="row">
-            <div class="control-group sm">
-              <label for="boidsCount">Boids: <span id="boidsCountValue">150</span></label>
-              <input id="boidsCount" type="range" min="10" max="1000" step="10" value="150" />
-            </div>
-            <div class="control-group sm">
-              <label for="perception">Perception radius: <span id="perceptionValue">50</span></label>
-              <input id="perception" type="range" min="10" max="200" step="5" value="50" />
-            </div>
-          </div>
-          <div class="row">
-            <div class="control-group sm">
-              <label for="separationDist">Separation distance: <span id="separationDistValue">20</span></label>
-              <input id="separationDist" type="range" min="5" max="100" step="1" value="20" />
-            </div>
-            <div class="control-group sm">
-              <label for="maxSpeed">Max speed: <span id="maxSpeedValue">2.5</span></label>
-              <input id="maxSpeed" type="range" min="0.5" max="6" step="0.1" value="2.5" />
-            </div>
-          </div>
-          <div class="row">
-            <div class="control-group sm">
-              <label for="maxForce">Max force: <span id="maxForceValue">0.05</span></label>
-              <input id="maxForce" type="range" min="0.01" max="0.5" step="0.01" value="0.05" />
-            </div>
-            <div class="control-group sm"></div>
-          </div>
-          <div class="row">
-            <div class="control-group sm">
-              <label for="weightSep">Separation weight: <span id="weightSepValue">1.5</span></label>
-              <input id="weightSep" type="range" min="0" max="3" step="0.1" value="1.5" />
-            </div>
-            <div class="control-group sm">
-              <label for="weightAlign">Alignment weight: <span id="weightAlignValue">1.0</span></label>
-              <input id="weightAlign" type="range" min="0" max="3" step="0.1" value="1.0" />
-            </div>
-          </div>
-          <div class="row">
-            <div class="control-group sm">
-              <label for="weightCoh">Cohesion weight: <span id="weightCohValue">1.0</span></label>
-              <input id="weightCoh" type="range" min="0" max="3" step="0.1" value="1.0" />
-            </div>
-            <div class="control-group sm"></div>
-          </div>
-          
-        </div>
-
-        <div class="row">
-          <div class="control-group sm">
-            <label for="delay">Step delay (ms): <span id="delayValue">100</span></label>
-            <input id="delay" type="range" min="0" max="1000" step="10" value="100" />
-          </div>
-          <div class="control-group sm">
-            <label for="maxIterations">Max steps</label>
-            <input id="maxIterations" type="number" min="1" max="20000" step="1" value="5000" />
-          </div>
-        </div>
-
-        <div class="row">
-          <label class="checkbox">
-            <input id="wrapEdges" type="checkbox" />
-            <span>Wrap edges (toroidal)</span>
-          </label>
-        </div>
-        <div class="row" id="unsatRow">
-          <label class="checkbox">
-            <input id="showUnsatisfied" type="checkbox" checked />
-            <span>Show unsatisfied markers</span>
-          </label>
-        </div>
-
         <div class="buttons">
           <button id="initializeBtn" class="btn" title="Initialize a new random grid">Initialize</button>
           <div class="btn-right">
@@ -156,6 +47,194 @@
             </button>
           </div>
         </div>
+        <div class="controls-sep"></div>
+        <h2>Controls</h2>
+
+        <div class="control-group" id="gridSizeGroup">
+          <label for="gridSize">Grid size: <span id="gridSizeValue">40</span> × <span id="gridSizeValue2">40</span></label>
+          <input id="gridSize" type="range" min="8" max="120" step="1" value="40" />
+        </div>
+
+        <div class="control-group" id="densityGroup">
+          <label for="density">Occupancy (% filled): <span id="densityValue">90</span>%</label>
+          <input id="density" type="range" min="0" max="100" step="1" value="90" />
+        </div>
+
+        <!-- Boids regular controls placed before Advanced for correct visual order -->
+        <div id="boidsPanel" class="sim-panel" role="tabpanel" aria-labelledby="tabBoids" hidden>
+          <div class="row">
+            <div class="control-group sm">
+              <label for="boidsCount">Boids: <span id="boidsCountValue">150</span></label>
+              <input id="boidsCount" type="range" min="10" max="1000" step="10" value="150" />
+            </div>
+            <div class="control-group sm">
+              <label for="perception">Perception radius: <span id="perceptionValue">50</span></label>
+              <input id="perception" type="range" min="10" max="200" step="5" value="50" />
+            </div>
+          </div>
+        </div>
+
+        <details class="advanced">
+          <summary>Advanced</summary>
+          <div class="row">
+            <div class="control-group sm">
+              <label for="delay">Step delay (ms): <span id="delayValue">100</span></label>
+              <input id="delay" type="range" min="0" max="1000" step="10" value="100" />
+            </div>
+            <div class="control-group sm">
+              <label for="maxIterations">Max steps</label>
+              <input id="maxIterations" type="number" min="1" max="20000" step="1" value="5000" />
+            </div>
+          </div>
+          <div class="row">
+            <label class="checkbox">
+              <input id="wrapEdges" type="checkbox" />
+              <span>Wrap edges (toroidal)</span>
+            </label>
+          </div>
+          <div class="row" id="unsatRow">
+            <label class="checkbox">
+              <input id="showUnsatisfied" type="checkbox" checked />
+              <span>Show unsatisfied markers</span>
+            </label>
+          </div>
+
+          <div id="schellingAdvanced" class="sim-advanced">
+            <div class="control-group">
+              <label for="ratioA">Type A ratio (of agents): <span id="ratioAValue">50</span>%</label>
+              <input id="ratioA" type="range" min="0" max="100" step="1" value="50" />
+            </div>
+            <div class="control-group">
+              <label for="tolerance">Minimum similar neighbors: <span id="toleranceValue">50</span>%</label>
+              <input id="tolerance" type="range" min="0" max="100" step="1" value="50" />
+              <small>Agents are satisfied if at least this percent of neighbors are the same type.</small>
+            </div>
+          </div>
+
+          <div id="lifeAdvanced" class="sim-advanced" hidden>
+            <div class="control-group">
+              <label for="lifePattern">Initial pattern</label>
+              <select id="lifePattern">
+                <option value="random" selected>Random</option>
+                <option value="glider">Glider</option>
+                <option value="blinker">Blinker</option>
+                <option value="pulsar">Pulsar</option>
+                <option value="gosper">Gosper Glider Gun</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="boidsAdvanced" class="sim-advanced" hidden>
+            <div class="row">
+              <div class="control-group sm">
+                <label for="separationDist">Separation distance: <span id="separationDistValue">20</span></label>
+                <input id="separationDist" type="range" min="5" max="100" step="1" value="20" />
+              </div>
+              <div class="control-group sm">
+                <label for="maxSpeed">Max speed: <span id="maxSpeedValue">2.5</span></label>
+                <input id="maxSpeed" type="range" min="0.5" max="6" step="0.1" value="2.5" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="control-group sm">
+                <label for="maxForce">Max force: <span id="maxForceValue">0.05</span></label>
+                <input id="maxForce" type="range" min="0.01" max="0.5" step="0.01" value="0.05" />
+              </div>
+              <div class="control-group sm"></div>
+            </div>
+            <div class="row">
+              <div class="control-group sm">
+                <label for="weightSep">Separation weight: <span id="weightSepValue">1.5</span></label>
+                <input id="weightSep" type="range" min="0" max="3" step="0.1" value="1.5" />
+              </div>
+              <div class="control-group sm">
+                <label for="weightAlign">Alignment weight: <span id="weightAlignValue">1.0</span></label>
+                <input id="weightAlign" type="range" min="0" max="3" step="0.1" value="1.0" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="control-group sm">
+                <label for="weightCoh">Cohesion weight: <span id="weightCohValue">1.0</span></label>
+                <input id="weightCoh" type="range" min="0" max="3" step="0.1" value="1.0" />
+              </div>
+              <div class="control-group sm"></div>
+            </div>
+            <div class="row">
+              <div class="control-group sm">
+                <label for="boidsTrails">Trails</label>
+                <label class="checkbox"><input id="boidsTrails" type="checkbox" checked /> <span>Enable trails</span></label>
+              </div>
+              <div class="control-group sm">
+                <label for="trailPersistence">Trail persistence: <span id="trailPersistenceValue">80</span></label>
+                <input id="trailPersistence" type="range" min="0" max="100" step="1" value="80" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="control-group sm">
+                <label for="mouseForce">Mouse force: <span id="mouseForceValue">0.0</span></label>
+                <input id="mouseForce" type="range" min="-2" max="2" step="0.1" value="0" />
+                <small>Positive attracts; negative repels. Move mouse over canvas.</small>
+              </div>
+              <div class="control-group sm">
+                <label for="wAvoid">Obstacle avoidance: <span id="wAvoidValue">1.2</span></label>
+                <input id="wAvoid" type="range" min="0" max="4" step="0.1" value="1.2" />
+                <small>Shift+Click: add obstacle; Alt+Click: remove nearest.</small>
+              </div>
+            </div>
+          </div>
+
+          <div id="firefliesAdvanced" class="sim-advanced" hidden>
+            <div class="row">
+              <div class="control-group sm">
+                <label for="ffRadius">Neighborhood radius: <span id="ffRadiusValue">3</span></label>
+                <input id="ffRadius" type="range" min="1" max="10" step="1" value="3" />
+              </div>
+              <div class="control-group sm">
+                <label for="ffCoupling">Coupling: <span id="ffCouplingValue">0.20</span></label>
+                <input id="ffCoupling" type="range" min="0" max="1" step="0.01" value="0.20" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="control-group sm">
+                <label for="ffPeriod">Base period (steps): <span id="ffPeriodValue">60</span></label>
+                <input id="ffPeriod" type="range" min="10" max="200" step="1" value="60" />
+              </div>
+              <div class="control-group sm">
+                <label for="ffJitter">Period jitter: <span id="ffJitterValue">20</span>%</label>
+                <input id="ffJitter" type="range" min="0" max="50" step="1" value="20" />
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <div id="schellingPanel" class="sim-panel" role="tabpanel" aria-labelledby="tabSchelling">
+          
+          <details class="edit">
+            <summary>Edit</summary>
+            <div class="control-group">
+              <label class="checkbox"><input id="schellingEditEnabled" type="checkbox" /> <span>Enable editing</span></label>
+            </div>
+            <div class="row">
+              <div class="control-group sm" style="align-self: end; margin-left: auto;">
+                <button id="schellingClearBtn" class="btn" title="Remove all agents from the grid">Clear</button>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <div id="lifePanel" class="sim-panel" role="tabpanel" aria-labelledby="tabLife" hidden>
+          
+          <details class="edit">
+            <summary>Edit</summary>
+            <div class="row">
+              <div class="control-group sm" style="align-self: end; margin-left: auto;">
+                <button id="lifeClearBtn" class="btn" title="Clear all live cells">Clear</button>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <div id="firefliesPanel" class="sim-panel" role="tabpanel" aria-labelledby="tabFireflies" hidden></div>
 
         <div class="stats">
           <div class="stat"><span class="label">Step</span><span id="statStep">0</span></div>
@@ -180,17 +259,21 @@
           <div class="legend" id="boidsLegend" hidden>
             <div class="legend-item"><span class="chip life-alive"></span>Boid</div>
           </div>
+          <div class="legend" id="firefliesLegend" hidden>
+            <div class="legend-item"><span class="chip firefly-flash"></span>Flashing</div>
+            <div class="legend-item"><span class="chip firefly-idle"></span>Idle</div>
+          </div>
         </div>
         <div class="canvas-wrap">
           <canvas id="gridCanvas" width="900" height="900" aria-label="Schelling grid" role="img"></canvas>
+          <div id="paintBadge" class="paint-badge" hidden></div>
         </div>
       </section>
 
       <aside class="panel rules">
-        <h2>Model Rules</h2>
+        <h2 class="rules-title"><a id="rulesWiki" class="rules-title-link" href="https://en.wikipedia.org/wiki/Schelling%27s_model_of_segregation" target="_blank" rel="noopener">Model Rules ↗</a></h2>
 
-        <div id="schellingRules">
-          <h3>Core Rules</h3>
+        <div id="schellingRules" class="rules-section">
           <ul>
             <li><b>Agents:</b> Two types: A (blue) and B (red). Empty cells are gray.</li>
             <li><b>Neighborhood:</b> Moore neighborhood (8 surrounding cells).</li>
@@ -199,8 +282,8 @@
             <li><b>Update rule:</b> In each iteration, all unsatisfied agents relocate in parallel to randomly chosen empty cells.</li>
             <li><b>Convergence:</b> Reached when no agents are unsatisfied or no empty cells remain.</li>
           </ul>
-          <h3>Simulation Options</h3>
-          <ul>
+          <h3 class="rules-options-title">Simulation Options</h3>
+          <ul class="rules-options">
             <li><b>Wrap edges:</b> When enabled, the grid is a torus; when disabled, borders are bounds. Manual moves and distance calculations respect this.</li>
             <li><b>Step/Run:</b> Advance one iteration or run until convergence using the model’s update rule.</li>
             <li><b>Manual move:</b> Clicking an unsatisfied agent moves it to the nearest empty cell that would satisfy it (if any); otherwise to a random empty cell.</li>
@@ -208,8 +291,7 @@
           </ul>
         </div>
 
-        <div id="lifeRules" hidden>
-          <h3>Core Rules</h3>
+        <div id="lifeRules" class="rules-section" hidden>
           <ul>
             <li><b>Cells:</b> Each cell is either <i>alive</i> or <i>dead</i>.</li>
             <li><b>Neighborhood:</b> Moore neighborhood (8 surrounding cells).</li>
@@ -217,8 +299,8 @@
             <li><b>Survival:</b> A live cell with 2 or 3 live neighbors stays alive; otherwise it dies.</li>
             <li><b>Sync update:</b> All cells update simultaneously each step.</li>
           </ul>
-          <h3>Simulation Options</h3>
-          <ul>
+          <h3 class="rules-options-title">Simulation Options</h3>
+          <ul class="rules-options">
             <li><b>Wrap edges:</b> When enabled, the grid is a torus; when disabled, borders are bounds.</li>
             <li><b>Step/Run:</b> Advance a single generation or continuously with a delay.</li>
             <li><b>Initialize:</b> Use <i>Occupancy</i> for random seeds or pick a preset pattern (Glider, Blinker, Pulsar, Gosper Gun).</li>
@@ -226,8 +308,7 @@
           </ul>
         </div>
 
-        <div id="boidsRules" hidden>
-          <h3>Core Rules</h3>
+        <div id="boidsRules" class="rules-section" hidden>
           <ul>
             <li><b>Agents:</b> Boids move in continuous space with position and velocity.</li>
             <li><b>Perception:</b> Each boid senses neighbors within a radius.</li>
@@ -236,20 +317,33 @@
             <li><b>Cohesion:</b> Steer towards the average position (center) of nearby boids.</li>
             <li><b>Limits:</b> Acceleration is limited by <i>max force</i>, speed by <i>max speed</i>.</li>
           </ul>
-          <h3>Simulation Options</h3>
-          <ul>
+          <h3 class="rules-options-title">Simulation Options</h3>
+          <ul class="rules-options">
             <li><b>Wrap edges:</b> When enabled, boids wrap around; otherwise they bounce at borders.</li>
             <li><b>Sliders:</b> Control boid count, perception radius, separation distance, and weights.</li>
-            <li><b>Interaction:</b> Click to add or remove boids (coming soon).</li>
+            <li><b>Interactions:</b> Click canvas to add a boid; Shift+Click to add an obstacle; Alt+Click to remove the nearest obstacle.</li>
+          </ul>
+        </div>
+
+        <div id="firefliesRules" class="rules-section" hidden>
+          <ul>
+            <li><b>Agents:</b> Fireflies occupy cells; each has its own flash period.</li>
+            <li><b>Phase:</b> Each firefly advances its phase each step; upon completing a cycle, it flashes and resets.</li>
+            <li><b>Coupling:</b> Neighbor phases pull each firefly forward/backward; stronger coupling yields faster synchronization.</li>
+            <li><b>Neighborhood:</b> Moore neighborhood with adjustable radius; respects <i>Wrap edges</i>.</li>
+          </ul>
+          <h3 class="rules-options-title">Simulation Options</h3>
+          <ul class="rules-options">
+            <li><b>Base period:</b> Average steps per flash; jitter randomizes individuals.</li>
+            <li><b>Coupling:</b> Strength of adjustment towards neighbors' phase (0–1).</li>
+            <li><b>Radius:</b> Number of cells around each firefly that influence it.</li>
           </ul>
         </div>
       </aside>
     </main>
 
-    <footer class="app-footer">
-      <span>Built for demos and simulations in Animal Behavior.</span>
-    </footer>
-
+    <footer class="app-footer"></footer>
+  
     <script src="./web/simulations.js"></script>
   </body>
   </html>
