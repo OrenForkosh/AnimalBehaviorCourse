@@ -52,6 +52,13 @@
     lifeLegend: document.getElementById('lifeLegend'),
     boidsLegend: document.getElementById('boidsLegend'),
     firefliesLegend: document.getElementById('firefliesLegend'),
+    mobileControls: document.getElementById('mobileControls'),
+    // Layout elements for sizing on mobile
+    appHeader: document.querySelector('.app-header'),
+    layoutEl: document.querySelector('.layout'),
+    controlsPanel: document.querySelector('section.panel.controls'),
+    canvasHeaderEl: document.querySelector('.canvas-header'),
+    canvasWrapEl: document.querySelector('.canvas-wrap'),
     // Boids controls
     boidsCount: document.getElementById('boidsCount'),
     boidsCountValue: document.getElementById('boidsCountValue'),
@@ -1384,12 +1391,55 @@
 
 
   window.addEventListener('resize', () => {
+    adjustMobileControlsVisibility();
+    sizeCanvasForViewport();
     fitCanvasToDisplay();
     drawGrid();
   });
 
   // Boot
   syncLabels();
+  // Mobile controls: collapse on small screens, open on desktop
+  function adjustMobileControlsVisibility() {
+    const mc = els.mobileControls;
+    if (!mc) return;
+    const isMobile = window.innerWidth <= 980;
+    if (isMobile) {
+      if (mc.hasAttribute('open')) mc.removeAttribute('open');
+    } else {
+      if (!mc.hasAttribute('open')) mc.setAttribute('open', '');
+    }
+  }
+  adjustMobileControlsVisibility();
+  // Compute canvas height to fill viewport (mobile and desktop)
+  function sizeCanvasForViewport() {
+    const c = els.canvas;
+    if (!c) return;
+    const isMobile = window.innerWidth <= 980;
+    const header = els.appHeader;
+    const layout = els.layoutEl;
+    const controls = els.controlsPanel;
+    const canvasHeader = els.canvasHeaderEl;
+    const wrap = els.canvasWrapEl;
+    const headerH = header ? header.getBoundingClientRect().height : 0;
+    const controlsH = isMobile ? (controls ? controls.getBoundingClientRect().height : 0) : 0;
+    const ls = layout ? getComputedStyle(layout) : null;
+    const padTop = ls ? (parseInt(ls.paddingTop, 10) || 0) : 0;
+    const padBottom = ls ? (parseInt(ls.paddingBottom, 10) || 0) : 0;
+    const rowGap = ls ? ((parseInt(ls.rowGap, 10) || parseInt(ls.gap, 10) || 0)) : 0;
+    const canvasHeaderH = canvasHeader ? canvasHeader.getBoundingClientRect().height : 0;
+    const ws = wrap ? getComputedStyle(wrap) : null;
+    const wrapPadTop = ws ? (parseInt(ws.paddingTop, 10) || 0) : 0;
+    const wrapPadBottom = ws ? (parseInt(ws.paddingBottom, 10) || 0) : 0;
+    let avail = window.innerHeight - headerH - padTop - padBottom - controlsH - rowGap - canvasHeaderH - wrapPadTop - wrapPadBottom - 8;
+    if (!Number.isFinite(avail)) avail = Math.round(window.innerHeight * 0.65);
+    const minH = 220;
+    c.style.height = Math.max(minH, Math.floor(avail)) + 'px';
+  }
+  sizeCanvasForViewport();
+  if (els.mobileControls) {
+    els.mobileControls.addEventListener('toggle', () => { sizeCanvasForViewport(); fitCanvasToDisplay(); drawGrid(); });
+  }
   // Initialize selected simulation from URL (?sim=schelling|life|boids)
   (function(){
     let initial = 'schelling';
@@ -1402,6 +1452,7 @@
   })();
   // If initial sim equals default and setSim returned early, ensure a model exists
   if (!model) autoInit();
+  sizeCanvasForViewport();
   fitCanvasToDisplay();
   // Ensure sim title reflects current selection
   if (typeof updateSimTitle === 'function') updateSimTitle();
