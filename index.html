@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Animal Behavior — Schelling's Model</title>
     <link rel="icon" type="image/svg+xml" href="./web/icon.svg" />
-    <link rel="stylesheet" href="./web/styles.css?v=6" />
+    <link rel="stylesheet" href="./web/styles.css?v=7" />
   </head>
   <body>
     <header class="app-header">
@@ -19,9 +19,14 @@
       <div class="spacer"></div>
       <div class="sim-tabs-header" role="tablist" aria-label="Simulation selector">
         <button id="tabSchelling" class="tab tab-schelling active" role="tab" aria-selected="true" aria-controls="schellingPanel">Schelling</button>
-        <button id="tabLife" class="tab tab-life" role="tab" aria-selected="false" aria-controls="lifePanel">Game of Life</button>
+        <button id="tabLife" class="tab tab-life" role="tab" aria-selected="false" aria-controls="lifePanel">
+          <span class="label-desktop">Game of Life</span>
+          <span class="label-mobile">GoL</span>
+        </button>
         <button id="tabBoids" class="tab tab-boids" role="tab" aria-selected="false" aria-controls="boidsPanel">Boids</button>
         <button id="tabFireflies" class="tab tab-fireflies" role="tab" aria-selected="false" aria-controls="firefliesPanel">Fireflies</button>
+        <button id="tabLogistic" class="tab tab-logistic" role="tab" aria-selected="false" aria-controls="logisticPanel">Logistic</button>
+        <button id="tabSierpinski" class="tab tab-sierpinski" role="tab" aria-selected="false" aria-controls="sierpinskiPanel">Sierpinski</button>
       </div>
       <img src="./web/huji-logo.svg" alt="The Hebrew University of Jerusalem" class="huji-logo" />
     </header>
@@ -77,6 +82,31 @@
             </div>
           </div>
 
+          <!-- Logistic regular controls placed before Advanced -->
+          <div id="logisticPanel" class="sim-panel" role="tabpanel" aria-labelledby="tabLogistic" hidden>
+            <div class="row">
+              <div class="control-group sm">
+                <label for="logR">Growth rate r: <span id="logRValue">0.50</span></label>
+                <input id="logR" type="range" min="0" max="4" step="0.1" value="0.50" />
+              </div>
+              <div class="control-group sm">
+                <label for="logCount">Initial populations: <span id="logCountValue">10</span></label>
+                <input id="logCount" type="range" min="0" max="50" step="1" value="10" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Sierpinski controls (minimal) -->
+          <div id="sierpinskiPanel" class="sim-panel" role="tabpanel" aria-labelledby="tabSierpinski" hidden>
+            <div class="row">
+              <div class="control-group sm">
+                <label for="spPointsPerStep">Points per step: <span id="spPointsPerStepValue">200</span></label>
+                <input id="spPointsPerStep" type="range" min="1" max="5000" step="1" value="200" />
+              </div>
+              <div class="control-group sm"></div>
+            </div>
+          </div>
+
           <details class="advanced">
             <summary>Advanced</summary>
             <div class="row">
@@ -85,8 +115,8 @@
                 <input id="delay" type="range" min="0" max="1000" step="10" value="100" />
               </div>
               <div class="control-group sm">
-                <label for="maxIterations">Max steps</label>
-                <input id="maxIterations" type="number" min="1" max="20000" step="1" value="5000" />
+              <label for="maxIterations">Max steps</label>
+              <input id="maxIterations" type="number" min="1" max="20000" step="1" value="100" />
               </div>
             </div>
             <div class="row">
@@ -208,6 +238,10 @@
                 </div>
               </div>
             </div>
+
+            <div id="logisticAdvanced" class="sim-advanced" hidden>
+            <!-- No advanced-only options for Logistic currently -->
+            </div>
           </details>
 
           <div id="schellingPanel" class="sim-panel" role="tabpanel" aria-labelledby="tabSchelling">
@@ -267,6 +301,12 @@
           <div class="legend" id="firefliesLegend" hidden>
             <div class="legend-item"><span class="chip firefly-flash"></span>Flashing</div>
             <div class="legend-item"><span class="chip firefly-idle"></span>Idle</div>
+          </div>
+          <div class="legend" id="logisticLegend" hidden>
+            <div class="legend-item"><span class="chip logistic-pop"></span>Population (normalized)</div>
+          </div>
+          <div class="legend" id="sierpinskiLegend" hidden>
+            <div class="legend-item"><span class="chip sierpinski-point"></span>Point</div>
           </div>
         </div>
         <div class="canvas-wrap">
@@ -344,11 +384,39 @@
             <li><b>Radius:</b> Number of cells around each firefly that influence it.</li>
           </ul>
         </div>
+
+        <div id="logisticRules" class="rules-section" hidden>
+          <ul>
+            <li><b>Equation:</b> dN/dt = r N (1 - N) with N normalized 0–1.</li>
+            <li><b>Multiple initial conditions:</b> Tracks many random initial N(0) in (0,1).</li>
+            <li><b>Parameters:</b> r is intrinsic growth rate.</li>
+          </ul>
+          <h3 class="rules-options-title">Simulation Options</h3>
+          <ul class="rules-options">
+            <li><b>r:</b> Growth rate (0–4).</li>
+            <li><b>Initial populations:</b> Number of random initial N(0).</li>
+          </ul>
+          <div class="bifurcation-figure">
+            <img id="bifurcationImage" src="./web/logistic-bifurcation.png" alt="Bifurcation diagram of the logistic map showing long-term values versus growth rate r" />
+            <div class="caption">Bifurcation diagram of the logistic map: long-term normalized population versus growth rate r.</div>
+          </div>
+        </div>
+
+        <div id="sierpinskiRules" class="rules-section" hidden>
+          <ul>
+            <li><b>Chaos game:</b> Start at a random point; at each step select a random vertex and move halfway towards it, plotting the new point.</li>
+            <li><b>Fractal:</b> Repeated steps generate the Sierpinski triangle pattern.</li>
+            <li><b>Controls:</b> Points per step controls how many points are added per iteration.</li>
+          </ul>
+        </div>
       </aside>
     </main>
 
     <footer class="app-footer"></footer>
   
-    <script src="./web/simulations.js?v=5"></script>
+    <div id="lightbox" class="lightbox" hidden>
+      <img id="lightboxImg" alt="Expanded diagram" />
+    </div>
+    <script src="./web/simulations.js?v=21"></script>
   </body>
   </html>

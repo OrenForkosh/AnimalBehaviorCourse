@@ -39,10 +39,14 @@
     tabLife: document.getElementById('tabLife'),
     tabBoids: document.getElementById('tabBoids'),
     tabFireflies: document.getElementById('tabFireflies'),
+    tabLogistic: document.getElementById('tabLogistic'),
+    tabSierpinski: document.getElementById('tabSierpinski'),
     schellingPanel: document.getElementById('schellingPanel'),
     lifePanel: document.getElementById('lifePanel'),
     boidsPanel: document.getElementById('boidsPanel'),
     firefliesPanel: document.getElementById('firefliesPanel'),
+    logisticPanel: document.getElementById('logisticPanel'),
+    sierpinskiPanel: document.getElementById('sierpinskiPanel'),
     lifePattern: document.getElementById('lifePattern'),
     unsatRow: document.getElementById('unsatRow'),
     schellingRules: document.getElementById('schellingRules'),
@@ -52,6 +56,8 @@
     lifeLegend: document.getElementById('lifeLegend'),
     boidsLegend: document.getElementById('boidsLegend'),
     firefliesLegend: document.getElementById('firefliesLegend'),
+    logisticLegend: document.getElementById('logisticLegend'),
+    sierpinskiLegend: document.getElementById('sierpinskiLegend'),
     mobileControls: document.getElementById('mobileControls'),
     // Layout elements for sizing on mobile
     appHeader: document.querySelector('.app-header'),
@@ -98,6 +104,18 @@
     ffPeriodValue: document.getElementById('ffPeriodValue'),
     ffJitter: document.getElementById('ffJitter'),
     ffJitterValue: document.getElementById('ffJitterValue'),
+    // Logistic controls
+    logR: document.getElementById('logR'),
+    logRValue: document.getElementById('logRValue'),
+    // no dt for discrete logistic map
+    logCount: document.getElementById('logCount'),
+    logCountValue: document.getElementById('logCountValue'),
+    // Sierpinski controls
+    spPointsPerStep: document.getElementById('spPointsPerStep'),
+    spPointsPerStepValue: document.getElementById('spPointsPerStepValue'),
+    bifurcationImage: document.getElementById('bifurcationImage'),
+    lightbox: document.getElementById('lightbox'),
+    lightboxImg: document.getElementById('lightboxImg'),
   };
 
   // Utility: RNG and shuffle
@@ -136,6 +154,104 @@
     return false;
   }
 
+
+  class LogisticModel {
+    constructor(opts) {
+      this.r = Math.max(0, (typeof opts.r === 'number' ? opts.r : 0.5));
+      const cnt = (typeof opts.count === 'number' && Number.isFinite(opts.count)) ? opts.count : 10;
+      this.count = Math.max(0, cnt);
+      this.stepCount = 0;
+      this.maxHistory = 2000;
+      this.Ns = new Float32Array(this.count);
+      this.histories = Array.from({ length: this.count }, () => []);
+      for (let i = 0; i < this.count; i++) {
+        const n0 = Math.random();
+        this.Ns[i] = n0;
+        this.histories[i].push(n0);
+      }
+    }
+    step() {
+      const r = this.r;
+      for (let i = 0; i < this.count; i++) {
+        const N = this.Ns[i];
+        let next = r * N * (1 - N);
+        if (next < 0) next = 0; else if (next > 1) next = 1;
+        this.Ns[i] = next;
+        const h = this.histories[i];
+        h.push(next);
+        if (h.length > this.maxHistory) h.shift();
+      }
+      this.stepCount++;
+      return { converged: false };
+    }
+    seriesCount() { return this.count; }
+    averagePopulation() {
+      let s = 0; for (let i = 0; i < this.count; i++) s += this.Ns[i];
+      return s / this.count;
+    }
+    addSeries(n0) {
+      // Clamp and snap handled by caller; ensure 0..1
+      const v = Math.max(0, Math.min(1, n0));
+      const len = this.histories[0] ? this.histories[0].length : 1;
+      const hist = new Array(len);
+      for (let i = 0; i < len; i++) hist[i] = v;
+      // Grow arrays
+      const nextNs = new Float32Array(this.count + 1);
+      for (let i = 0; i < this.count; i++) nextNs[i] = this.Ns[i];
+      nextNs[this.count] = v;
+      this.Ns = nextNs;
+      this.histories.push(hist);
+      this.count++;
+    }
+  }
+
+  class SierpinskiModel {
+    constructor(opts) {
+      this.width = opts.width; this.height = opts.height;
+      this.pointsPerStep = Math.max(1, opts.pointsPerStep || 200);
+      this.stepCount = 0;
+      // Create triangle vertices centered in canvas
+      const margin = 16;
+      const w = this.width - margin*2;
+      const h = this.height - margin*2;
+      const size = Math.min(w, h);
+      const cx = this.width/2, cy = this.height/2;
+      const r = size*0.45;
+      // Equilateral triangle vertices
+      this.vertices = [
+        { x: cx, y: cy - r },
+        { x: cx - r*Math.cos(Math.PI/6), y: cy + r*Math.sin(Math.PI/6) },
+        { x: cx + r*Math.cos(Math.PI/6), y: cy + r*Math.sin(Math.PI/6) },
+      ];
+      // Start at a random point inside bounding box
+      this.cur = { x: cx + (Math.random()-0.5)*size*0.5, y: cy + (Math.random()-0.5)*size*0.5 };
+      this.points = [];
+      this.maxPoints = 200000;
+    }
+    step() {
+      for (let i=0;i<this.pointsPerStep;i++){
+        const k = (Math.random()*3)|0; // 0..2
+        const v = this.vertices[k];
+        this.cur = { x: (this.cur.x + v.x)/2, y: (this.cur.y + v.y)/2 };
+        this.points.push(this.cur.x, this.cur.y);
+        if (this.points.length/2 > this.maxPoints) this.points.splice(0, 2000);
+      }
+      this.stepCount++;
+      return { converged: false };
+    }
+    stepSingle() {
+      const from = { x: this.cur.x, y: this.cur.y };
+      const k = (Math.random()*3)|0;
+      const v = this.vertices[k];
+      const to = { x: (from.x + v.x)/2, y: (from.y + v.y)/2 };
+      this.cur = to;
+      this.points.push(this.cur.x, this.cur.y);
+      if (this.points.length/2 > this.maxPoints) this.points.splice(0, 2000);
+      this.stepCount++;
+      return { vertexIndex: k, from, to };
+    }
+    countPoints() { return (this.points.length/2)|0; }
+  }
 
   class BoidsModel {
     constructor(opts) {
@@ -610,12 +726,13 @@
   // Per-simulation defaults/state for Wrap edges
   let simWrap = { schelling: false, life: true, boids: true, fireflies: true };
   // Remember per-sim density (occupancy) preferences; defaults: Schelling 90, Life 50
-  let simDensity = { schelling: 90, life: 50, boids: 50, fireflies: 80 };
+  let simDensity = { schelling: 90, life: 50, boids: 50, fireflies: 80, logistic: 0 };
   // Remember per-sim step delay (ms); default Boids=50, others=100
-  let simDelay = { schelling: 100, life: 100, boids: 50, fireflies: 50 };
+  let simDelay = { schelling: 100, life: 100, boids: 50, fireflies: 50, logistic: 50 };
   let cellSize = 10; // pixels
   let view = { offsetX: 0, offsetY: 0, width: 0, height: 0 };
   let lastMove = null; // { from:{x,y}, to:{x,y}, time:number }
+  let lastSierp = null; // { info:{vertexIndex,from,to}, time:number }
 
   function fitCanvasToDisplay() {
     const dpr = Math.max(1, Math.floor(window.devicePixelRatio || 1));
@@ -667,6 +784,152 @@
         ctx.lineTo(boid.x + Math.cos(angle - 2.5) * sizePx * 0.6, boid.y + Math.sin(angle - 2.5) * sizePx * 0.6);
         ctx.closePath();
         ctx.fill();
+      }
+      return;
+    }
+
+    // Logistic: draw chart
+    if (currentSim === 'logistic') {
+      ctx.fillStyle = '#0c0f14';
+      ctx.fillRect(0, 0, w, h);
+      view = { offsetX: 0, offsetY: 0, width: w, height: h };
+      const padL = 46, padR = 12, padT = 12, padB = 28;
+      const iw = Math.max(10, w - padL - padR);
+      const ih = Math.max(10, h - padT - padB);
+      // Reserve right-side area for histogram
+      const histW = Math.min(110, Math.max(60, Math.floor(iw * 0.22)));
+      const gapW = 8;
+      const plotW = Math.max(40, iw - histW - gapW);
+
+      // Axes box for plot area
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(padL, padT);
+      ctx.lineTo(padL, padT + ih);
+      ctx.lineTo(padL + plotW, padT + ih);
+      ctx.stroke();
+
+      // horizontal grid lines at 0, .25, .5, .75, 1 with tick labels
+      const ticks = [0, 0.25, 0.5, 0.75, 1];
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.beginPath();
+      for (let f of ticks) {
+        const y = padT + ih - f * ih;
+        ctx.moveTo(padL, y);
+        ctx.lineTo(padL + plotW, y);
+      }
+      ctx.stroke();
+      // Tick labels
+      ctx.fillStyle = '#a9b1c6';
+      ctx.font = '12px system-ui, -apple-system, Segoe UI, Roboto, Inter, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      for (let f of ticks) {
+        const y = padT + ih - f * ih;
+        const label = (Math.round(f * 100) % 25 === 0) ? f.toFixed(2).replace(/\.00$/, '') : f.toFixed(2);
+        ctx.fillText(label, padL - 6, y);
+      }
+
+      // plot multiple series
+      const histories = model.histories;
+      const count = model.seriesCount();
+      const len = histories[0] ? histories[0].length : 0;
+      const maxPoints = Math.max(2, Math.min(len, plotW));
+      const start = len - maxPoints;
+      for (let s = 0; s < count; s++) {
+        const hist = histories[s];
+        const hue = Math.floor((s / Math.max(1, count)) * 300); // 0..300
+        ctx.strokeStyle = `hsla(${hue}, 85%, 65%, 0.9)`;
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        for (let i = 0; i < maxPoints; i++) {
+          const v = hist[Math.max(0, start + i)];
+          const x = padL + (i / (maxPoints - 1)) * plotW;
+          const y = padT + ih - Math.max(0, Math.min(ih, v * ih));
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+
+      // Histogram of current values on the right
+      const vals = model.Ns || new Float32Array(0);
+      const bins = 20;
+      const counts = new Array(bins).fill(0);
+      for (let i = 0; i < vals.length; i++) {
+        const v = Math.max(0, Math.min(1, vals[i]));
+        let bi = Math.floor(v * bins);
+        if (bi >= bins) bi = bins - 1;
+        counts[bi]++;
+      }
+      const maxC = counts.reduce((a,b)=>Math.max(a,b), 0) || 1;
+      const histX = padL + plotW + gapW;
+      const barMaxW = histW - 8;
+      ctx.fillStyle = 'rgba(255,255,255,0.04)';
+      ctx.fillRect(histX - 2, padT, histW + 2, ih);
+      for (let i = 0; i < bins; i++) {
+        const f0 = i / bins;
+        const f1 = (i + 1) / bins;
+        const yc0 = padT + ih - f1 * ih;
+        const yc1 = padT + ih - f0 * ih;
+        const bh = Math.max(1, yc1 - yc0 - 1);
+        const val = counts[i];
+        const bw = Math.max(1, Math.floor((val / maxC) * barMaxW));
+        // color fades with bin index
+        ctx.fillStyle = 'rgba(96,165,250,0.55)';
+        ctx.fillRect(histX, yc0 + 1, bw, bh);
+      }
+
+      // Separator line
+      ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+      ctx.beginPath();
+      ctx.moveTo(histX - gapW/2, padT);
+      ctx.lineTo(histX - gapW/2, padT + ih);
+      ctx.stroke();
+
+      return;
+    }
+
+    if (currentSim === 'sierpinski') {
+      ctx.fillStyle = '#0c0f14';
+      ctx.fillRect(0,0,w,h);
+      view = { offsetX: 0, offsetY: 0, width: w, height: h };
+      // draw points
+      ctx.fillStyle = '#f59e0b';
+      const pts = model.points;
+      const r = 2.8;
+      for (let i=0;i<pts.length;i+=2){
+        const x = pts[i], y = pts[i+1];
+        ctx.fillRect(x - r/2, y - r/2, r, r);
+      }
+      // optionally draw vertices
+      ctx.fillStyle = '#fbbf24';
+      for (const v of model.vertices) ctx.fillRect(v.x-2, v.y-2, 4, 4);
+      // highlight last step if available
+      if (lastSierp && lastSierp.info) {
+        const age = Date.now() - lastSierp.time;
+        // show highlight up to ~2s
+        if (age < 2000) {
+          const { vertexIndex, from, to } = lastSierp.info;
+          const vert = model.vertices[vertexIndex];
+          // highlight vertex with ring
+          ctx.save();
+          ctx.strokeStyle = 'rgba(253, 224, 71, 0.95)';
+          ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.arc(vert.x, vert.y, 12, 0, Math.PI*2); ctx.stroke();
+          // draw from-to line
+          ctx.strokeStyle = 'rgba(96, 165, 250, 0.95)';
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(from.x, from.y); ctx.lineTo(to.x, to.y); ctx.stroke();
+          // draw points at from (blue) and to (cyan)
+          ctx.fillStyle = 'rgba(59, 130, 246, 0.95)';
+          ctx.beginPath(); ctx.arc(from.x, from.y, 4, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = 'rgba(34, 211, 238, 0.95)';
+          ctx.beginPath(); ctx.arc(to.x, to.y, 4, 0, Math.PI*2); ctx.fill();
+          ctx.restore();
+        } else {
+          lastSierp = null;
+        }
       }
       return;
     }
@@ -884,6 +1147,16 @@
       els.statAgents.textContent = String(agents);
       els.statUnsatisfied.textContent = '-';
       els.statSatisfied.textContent = '-';
+    } else if (currentSim === 'logistic') {
+      const series = model.seriesCount ? model.seriesCount() : 0;
+      els.statAgents.textContent = String(series);
+      els.statUnsatisfied.textContent = '-';
+      els.statSatisfied.textContent = '-';
+    } else if (currentSim === 'sierpinski') {
+      const pts = model.countPoints ? model.countPoints() : 0;
+      els.statAgents.textContent = String(pts);
+      els.statUnsatisfied.textContent = '-';
+      els.statSatisfied.textContent = '-';
     }
     if (typeof extra.moved === 'number') {
       els.statMoved.textContent = String(extra.moved);
@@ -915,12 +1188,16 @@
     if (els.trailPersistenceValue) els.trailPersistenceValue.textContent = els.trailPersistence.value;
     if (els.mouseForceValue) els.mouseForceValue.textContent = parseFloat(els.mouseForce.value || '0').toFixed(1);
     if (els.wAvoidValue) els.wAvoidValue.textContent = els.wAvoid.value;
+    if (els.logRValue && els.logR) els.logRValue.textContent = parseFloat(els.logR.value||'0').toFixed(2);
+    // no dt label for logistic map
+    if (els.logCountValue && els.logCount) els.logCountValue.textContent = els.logCount.value;
+    if (els.spPointsPerStepValue && els.spPointsPerStep) els.spPointsPerStepValue.textContent = els.spPointsPerStep.value;
   }
 
   [els.gridSize, els.density, els.ratioA, els.tolerance, els.delay].forEach(inp => {
     inp.addEventListener('input', syncLabels);
   });
-  [els.boidsCount, els.perception, els.separationDist, els.maxSpeed, els.maxForce, els.weightSep, els.weightAlign, els.weightCoh, els.trailPersistence, els.mouseForce, els.wAvoid, els.ffRadius, els.ffCoupling, els.ffPeriod, els.ffJitter].forEach(inp => {
+  [els.boidsCount, els.perception, els.separationDist, els.maxSpeed, els.maxForce, els.weightSep, els.weightAlign, els.weightCoh, els.trailPersistence, els.mouseForce, els.wAvoid, els.ffRadius, els.ffCoupling, els.ffPeriod, els.ffJitter, els.logR, els.logCount, els.spPointsPerStep].forEach(inp => {
     if (!inp) return;
     inp.addEventListener('input', syncLabels);
   });
@@ -966,6 +1243,16 @@
       const jitterParsed = parseInt(els.ffJitter.value, 10);
       const jitter = Number.isFinite(jitterParsed) ? jitterParsed : 20;
       model = new FirefliesModel(size, density, wrap, radius, coupling, basePeriod, jitter);
+    } else if (currentSim === 'logistic') {
+      const r = Number.isFinite(parseFloat(els.logR.value)) ? parseFloat(els.logR.value) : 0.5;
+      const rawCount = parseInt(els.logCount.value || '10', 10);
+      const count = Number.isFinite(rawCount) ? Math.max(0, Math.min(50, rawCount)) : 10;
+      model = new LogisticModel({ r, count });
+    } else if (currentSim === 'sierpinski') {
+      fitCanvasToDisplay();
+      const rect = els.canvas.getBoundingClientRect();
+      const pps = parseInt(els.spPointsPerStep && els.spPointsPerStep.value || '200', 10) || 200;
+      model = new SierpinskiModel({ width: rect.width, height: rect.height, pointsPerStep: pps });
     }
     fitCanvasToDisplay();
     drawGrid();
@@ -989,7 +1276,7 @@
     inp.addEventListener('change', autoInit);
   });
   // Auto re-init for boids controls
-  ;[els.boidsCount, els.perception, els.separationDist, els.maxSpeed, els.maxForce, els.weightSep, els.weightAlign, els.weightCoh, els.trailPersistence, els.mouseForce, els.wAvoid, els.ffRadius, els.ffCoupling, els.ffPeriod, els.ffJitter].forEach(inp => {
+  ;[els.boidsCount, els.perception, els.separationDist, els.maxSpeed, els.maxForce, els.weightSep, els.weightAlign, els.weightCoh, els.trailPersistence, els.mouseForce, els.wAvoid, els.ffRadius, els.ffCoupling, els.ffPeriod, els.ffJitter, els.logR, els.logCount, els.spPointsPerStep].forEach(inp => {
     if (!inp) return;
     inp.addEventListener('input', debouncedAutoInit);
     inp.addEventListener('change', autoInit);
@@ -1023,9 +1310,16 @@
 
   function stepOnce() {
     if (!model) return;
-    const stats = model.step();
-    drawGrid();
-    updateStats(stats);
+    if (currentSim === 'sierpinski' && typeof model.stepSingle === 'function') {
+      const info = model.stepSingle();
+      lastSierp = { info, time: Date.now() };
+      drawGrid();
+      updateStats({});
+    } else {
+      const stats = model.step();
+      drawGrid();
+      updateStats(stats);
+    }
   }
 
   // Manual move: click a cell to move if unsatisfied
@@ -1161,6 +1455,8 @@
     document.body.classList.toggle('sim-life', sim === 'life');
     document.body.classList.toggle('sim-boids', sim === 'boids');
     document.body.classList.toggle('sim-fireflies', sim === 'fireflies');
+    document.body.classList.toggle('sim-logistic', sim === 'logistic');
+    document.body.classList.toggle('sim-sierpinski', sim === 'sierpinski');
     // Apply target sim default/last density
     if (els.density) {
       const next = simDensity[sim] ?? (sim === 'life' ? 50 : 90);
@@ -1188,34 +1484,50 @@
     if (els.tabFireflies) {
       els.tabFireflies.classList.toggle('active', sim === 'fireflies');
     }
+    if (els.tabLogistic) {
+      els.tabLogistic.classList.toggle('active', sim === 'logistic');
+    }
+    if (els.tabSierpinski) {
+      els.tabSierpinski.classList.toggle('active', sim === 'sierpinski');
+    }
     if (els.schellingPanel) els.schellingPanel.hidden = sim !== 'schelling';
     if (els.lifePanel) els.lifePanel.hidden = sim !== 'life';
     if (els.boidsPanel) els.boidsPanel.hidden = sim !== 'boids';
     if (els.firefliesPanel) els.firefliesPanel.hidden = sim !== 'fireflies';
+    if (els.logisticPanel) els.logisticPanel.hidden = sim !== 'logistic';
+    if (els.sierpinskiPanel) els.sierpinskiPanel.hidden = sim !== 'sierpinski';
     if (els.unsatRow) els.unsatRow.style.display = (sim === 'schelling') ? '' : 'none';
     // Toggle common grid controls visibility (not used by Boids)
     const gridSizeGroup = document.getElementById('gridSizeGroup');
     const densityGroup = document.getElementById('densityGroup');
-    const showGridControls = (sim !== 'boids');
+    const showGridControls = (sim !== 'boids' && sim !== 'logistic' && sim !== 'sierpinski');
     if (gridSizeGroup) gridSizeGroup.style.display = showGridControls ? '' : 'none';
     if (densityGroup) densityGroup.style.display = showGridControls ? '' : 'none';
     if (els.schellingRules) els.schellingRules.hidden = sim !== 'schelling';
     if (els.lifeRules) els.lifeRules.hidden = sim !== 'life';
     if (els.boidsRules) els.boidsRules.hidden = sim !== 'boids';
     const fr = document.getElementById('firefliesRules'); if (fr) fr.hidden = sim !== 'fireflies';
+    const lor = document.getElementById('logisticRules'); if (lor) lor.hidden = sim !== 'logistic';
+    const sir = document.getElementById('sierpinskiRules'); if (sir) sir.hidden = sim !== 'sierpinski';
     if (els.schellingLegend) els.schellingLegend.hidden = sim !== 'schelling';
     if (els.lifeLegend) els.lifeLegend.hidden = sim !== 'life';
     if (els.boidsLegend) els.boidsLegend.hidden = sim !== 'boids';
     if (els.firefliesLegend) els.firefliesLegend.hidden = sim !== 'fireflies';
+    if (els.logisticLegend) els.logisticLegend.hidden = sim !== 'logistic';
+    if (els.sierpinskiLegend) els.sierpinskiLegend.hidden = sim !== 'sierpinski';
     // Toggle Advanced per-sim blocks
     const sa = document.getElementById('schellingAdvanced');
     const la = document.getElementById('lifeAdvanced');
     const ba = document.getElementById('boidsAdvanced');
     const fa = document.getElementById('firefliesAdvanced');
+    const loa = document.getElementById('logisticAdvanced');
+    const sia = document.getElementById('sierpinskiAdvanced');
     if (sa) sa.hidden = sim !== 'schelling';
     if (la) la.hidden = sim !== 'life';
     if (ba) ba.hidden = sim !== 'boids';
     if (fa) fa.hidden = sim !== 'fireflies';
+    if (loa) loa.hidden = sim !== 'logistic';
+    if (sia) sia.hidden = sim !== 'sierpinski';
     // Update the per-simulation title link
     updateSimTitle();
     // Update rules Wikipedia link
@@ -1225,6 +1537,8 @@
       else if (sim === 'life') rulesWiki.href = 'https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life';
       else if (sim === 'boids') rulesWiki.href = 'https://en.wikipedia.org/wiki/Boids';
       else if (sim === 'fireflies') rulesWiki.href = 'https://en.wikipedia.org/wiki/Firefly_synchronization';
+      else if (sim === 'logistic') rulesWiki.href = 'https://en.wikipedia.org/wiki/Logistic_function';
+      else if (sim === 'sierpinski') rulesWiki.href = 'https://en.wikipedia.org/wiki/Sierpinski_triangle';
     }
     autoInit();
     // Reflect new selection in URL
@@ -1239,6 +1553,12 @@
   }
   if (els.tabFireflies) {
     els.tabFireflies.addEventListener('click', ()=>setSim('fireflies'));
+  }
+  if (els.tabLogistic) {
+    els.tabLogistic.addEventListener('click', ()=>setSim('logistic'));
+  }
+  if (els.tabSierpinski) {
+    els.tabSierpinski.addEventListener('click', ()=>setSim('sierpinski'));
   }
   if (els.lifePattern) {
     els.lifePattern.addEventListener('change', () => {
@@ -1282,7 +1602,7 @@
   // Sim title link updater
   function updateSimTitle() {
     if (!els.simTitle) return;
-    els.simTitle.classList.remove('schelling','life','boids','fireflies');
+    els.simTitle.classList.remove('schelling','life','boids','fireflies','logistic','sierpinski');
     if (currentSim === 'schelling') {
       els.simTitle.textContent = "Schelling's Model of Segregation";
       els.simTitle.href = 'https://en.wikipedia.org/wiki/Schelling%27s_model_of_segregation';
@@ -1299,6 +1619,14 @@
       els.simTitle.textContent = "Fireflies Synchronization";
       els.simTitle.href = 'https://en.wikipedia.org/wiki/Firefly_synchronization';
       els.simTitle.classList.add('fireflies');
+    } else if (currentSim === 'logistic') {
+      els.simTitle.textContent = "Logistic Growth";
+      els.simTitle.href = 'https://en.wikipedia.org/wiki/Logistic_function';
+      els.simTitle.classList.add('logistic');
+    } else if (currentSim === 'sierpinski') {
+      els.simTitle.textContent = "Sierpinski Triangle";
+      els.simTitle.href = 'https://en.wikipedia.org/wiki/Sierpinski_triangle';
+      els.simTitle.classList.add('sierpinski');
     }
   }
   // End sim switching
@@ -1341,6 +1669,48 @@
       else if (e.altKey) model.removeNearestObstacle(x, y);
       else model.boids.push({ x, y, vx: (Math.random()*2-1)*model.maxSpeed, vy: (Math.random()*2-1)*model.maxSpeed });
       drawGrid();
+    } else if (currentSim === 'sierpinski') {
+      const rect = els.canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      if (model) {
+        model.cur = { x, y };
+        // Add the chosen point to the plotted set immediately
+        if (Array.isArray(model.points)) {
+          model.points.push(x, y);
+        }
+        // Optionally show a brief marker by reusing lastSierp
+        lastSierp = { info: { vertexIndex: null, from: { x, y }, to: { x, y } }, time: Date.now() };
+        drawGrid();
+        updateStats({});
+      }
+    } else if (currentSim === 'logistic') {
+      const rect = els.canvas.getBoundingClientRect();
+      const cx = e.clientX - rect.left;
+      const cy = e.clientY - rect.top;
+      // Mirror plot layout from drawGrid()
+      const padL = 46, padR = 12, padT = 12, padB = 28;
+      const iw = Math.max(10, rect.width - padL - padR);
+      const ih = Math.max(10, rect.height - padT - padB);
+      const histW = Math.min(110, Math.max(60, Math.floor(iw * 0.22)));
+      const gapW = 8;
+      const plotW = Math.max(40, iw - histW - gapW);
+      const inX = (cx >= padL && cx <= padL + plotW);
+      const inY = (cy >= padT && cy <= padT + ih);
+      if (!inX || !inY) return;
+      let f = (padT + ih - cy) / ih; // 0..1
+      if (!Number.isFinite(f)) return;
+      f = Math.max(0, Math.min(1, f));
+      // Snap to 0.0625 (1/16) resolution
+      const step = 0.0625;
+      let snapped = Math.round(f / step) * step;
+      if (snapped < 1e-9) snapped = 0; // allow exact zero
+      if (snapped > 1) snapped = 1;
+      if (model && typeof model.addSeries === 'function') {
+        model.addSeries(snapped);
+        drawGrid();
+        updateStats({});
+      }
     }
   });
   // Mouse position for boids
@@ -1399,6 +1769,22 @@
 
   // Boot
   syncLabels();
+  // Simple lightbox for diagram
+  if (els.bifurcationImage && els.lightbox && els.lightboxImg) {
+    els.bifurcationImage.style.cursor = 'zoom-in';
+    els.bifurcationImage.addEventListener('click', () => {
+      els.lightboxImg.src = els.bifurcationImage.src;
+      els.lightbox.removeAttribute('hidden');
+    });
+    els.lightbox.addEventListener('click', () => {
+      els.lightbox.setAttribute('hidden', '');
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && els.lightbox && !els.lightbox.hasAttribute('hidden')) {
+        els.lightbox.setAttribute('hidden', '');
+      }
+    });
+  }
   // Mobile controls: collapse on small screens, open on desktop
   function adjustMobileControlsVisibility() {
     const mc = els.mobileControls;
@@ -1446,7 +1832,7 @@
     try {
       const url = new URL(window.location.href);
       const s = (url.searchParams.get('sim') || '').toLowerCase();
-      if (s === 'schelling' || s === 'life' || s === 'boids' || s === 'fireflies') initial = s;
+      if (s === 'schelling' || s === 'life' || s === 'boids' || s === 'fireflies' || s === 'logistic' || s === 'sierpinski') initial = s;
     } catch(_) {}
     setSim(initial);
   })();
